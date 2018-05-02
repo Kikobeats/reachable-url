@@ -18,3 +18,9 @@ test('resolve GET request', async t => {
   t.is(200, res.statusCode)
   t.is('GET', res.req.method)
 })
+
+test('passing options', async t => {
+  const url = 'https://httpbin.org/redirect-to?url=http%3A%2F%2Fexample.com%2F'
+  const res = await reachableUrl(url, { followRedirect: false })
+  t.is(302, res.statusCode)
+})
