@@ -4,7 +4,7 @@ const test = require('ava')
 const reachableUrl = require('..')
 
 test('resolve HEAD request', async t => {
-  const url = 'https://kikobeats.com'
+  const url = 'https://google.com'
   const res = await reachableUrl(url)
 
   t.is(200, res.statusCode)
