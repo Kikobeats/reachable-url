@@ -9,11 +9,7 @@ const createRequest = method => async (url, opts) => {
 
   req.on('redirect', res => redirectUrls.push([res.statusCode, res.url]))
 
-  const res = await req
-
-  res.redirectUrls = redirectUrls.reverse()
-
-  return res
+  return { ...(await req), redirectUrls }
 }
 
 const fromHEAD = createRequest('head')

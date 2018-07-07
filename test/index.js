@@ -19,16 +19,25 @@ test('resolve GET request', async t => {
   t.is('GET', res.req.method)
 })
 
-test('Get status code associated per each redirect url', async t => {
+test('resolve redirect', async t => {
+  const url = 'https://github.com/kikobeats/splashy'
+  const res = await reachableUrl(url)
+
+  t.deepEqual(res.redirectUrls, [[301, 'https://github.com/kikobeats/splashy']])
+  t.is('https://github.com/microlinkhq/splashy', res.url)
+  t.is(200, res.statusCode)
+})
+
+test('resolve multiple redirects', async t => {
   const url = 'https://httpbin-org.herokuapp.com/redirect/3'
   const res = await reachableUrl(url)
 
   t.deepEqual(res.redirectUrls, [
-    [302, 'https://httpbin-org.herokuapp.com/relative-redirect/1'],
+    [302, 'https://httpbin-org.herokuapp.com/redirect/3'],
     [302, 'https://httpbin-org.herokuapp.com/relative-redirect/2'],
-    [302, 'https://httpbin-org.herokuapp.com/redirect/3']
+    [302, 'https://httpbin-org.herokuapp.com/relative-redirect/1']
   ])
-
+  t.is('https://httpbin-org.herokuapp.com/get', res.url)
   t.is(200, res.statusCode)
 })
 
