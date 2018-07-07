@@ -3,7 +3,18 @@
 const pAny = require('p-any')
 const got = require('got')
 
-const createRequest = method => async (url, opts) => got[method](url, opts)
+const createRequest = method => async (url, opts) => {
+  const req = got[method](url, opts)
+  const redirectUrls = []
+
+  req.on('redirect', res => redirectUrls.push([res.statusCode, res.url]))
+
+  const res = await req
+
+  res.redirectUrls = redirectUrls.reverse()
+
+  return res
+}
 
 const fromHEAD = createRequest('head')
 const fromGET = createRequest('get')
