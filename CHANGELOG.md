@@ -1,3 +1,10 @@
+<a name="1.1.2"></a>
+## 1.1.2 (2018-07-07)
+
+* Separate redirect urls from status code ([d9df81f](https://github.com/Kikobeats/reachable-url/commit/d9df81f))
+
+
+
 <a name="1.1.1"></a>
 ## 1.1.1 (2018-07-07)
 
