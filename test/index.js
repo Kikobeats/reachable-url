@@ -23,7 +23,8 @@ test('resolve redirect', async t => {
   const url = 'https://github.com/kikobeats/splashy'
   const res = await reachableUrl(url)
 
-  t.deepEqual(res.redirectUrls, [[301, 'https://github.com/kikobeats/splashy']])
+  t.deepEqual(res.redirectUrls, ['https://github.com/kikobeats/splashy'])
+  t.deepEqual(res.redirectStatusCodes, [301])
   t.is('https://github.com/microlinkhq/splashy', res.url)
   t.is(200, res.statusCode)
 })
@@ -33,10 +34,11 @@ test('resolve multiple redirects', async t => {
   const res = await reachableUrl(url)
 
   t.deepEqual(res.redirectUrls, [
-    [302, 'https://httpbin-org.herokuapp.com/redirect/3'],
-    [302, 'https://httpbin-org.herokuapp.com/relative-redirect/2'],
-    [302, 'https://httpbin-org.herokuapp.com/relative-redirect/1']
+    'https://httpbin-org.herokuapp.com/redirect/3',
+    'https://httpbin-org.herokuapp.com/relative-redirect/2',
+    'https://httpbin-org.herokuapp.com/relative-redirect/1'
   ])
+  t.deepEqual(res.redirectStatusCodes, [302, 302, 302])
   t.is('https://httpbin-org.herokuapp.com/get', res.url)
   t.is(200, res.statusCode)
 })

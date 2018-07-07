@@ -5,11 +5,15 @@ const got = require('got')
 
 const createRequest = method => async (url, opts) => {
   const req = got[method](url, opts)
+  const redirectStatusCodes = []
   const redirectUrls = []
 
-  req.on('redirect', res => redirectUrls.push([res.statusCode, res.url]))
+  req.on('redirect', res => {
+    redirectUrls.push(res.url)
+    redirectStatusCodes.push(res.statusCode)
+  })
 
-  return { ...(await req), redirectUrls }
+  return { ...(await req), redirectUrls, redirectStatusCodes }
 }
 
 const fromHEAD = createRequest('head')
