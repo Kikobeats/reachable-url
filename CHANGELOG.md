@@ -1,3 +1,10 @@
+<a name="1.1.3"></a>
+## 1.1.3 (2018-08-07)
+
+* Update deps ([ca9ce00](https://github.com/Kikobeats/reachable-url/commit/ca9ce00))
+
+
+
 <a name="1.1.2"></a>
 ## 1.1.2 (2018-07-07)
 
