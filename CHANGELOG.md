@@ -1,3 +1,11 @@
+<a name="1.1.4"></a>
+## 1.1.4 (2018-09-09)
+
+* Update dependencies ([a140f62](https://github.com/Kikobeats/reachable-url/commit/a140f62))
+* Update package.json ([21e1d96](https://github.com/Kikobeats/reachable-url/commit/21e1d96))
+
+
+
 <a name="1.1.3"></a>
 ## 1.1.3 (2018-08-07)
 
