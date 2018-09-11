@@ -4,7 +4,7 @@ const pAny = require('p-any')
 const got = require('got')
 
 const createRequest = method => async (url, opts) => {
-  const req = got[method](url, opts)
+  const req = got[method](url, { encoding: null, ...opts })
   const redirectStatusCodes = []
   const redirectUrls = []
 
