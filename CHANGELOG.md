@@ -1,3 +1,10 @@
+<a name="1.1.5"></a>
+## 1.1.5 (2018-09-11)
+
+* Avoid parse response ([93a5b39](https://github.com/Kikobeats/reachable-url/commit/93a5b39)), closes [#1](https://github.com/Kikobeats/reachable-url/issues/1)
+
+
+
 <a name="1.1.4"></a>
 ## 1.1.4 (2018-09-09)
 
