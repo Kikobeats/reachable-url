@@ -1,3 +1,10 @@
+<a name="1.1.6"></a>
+## 1.1.6 (2018-09-12)
+
+* Ensure encode url ([87e3456](https://github.com/Kikobeats/reachable-url/commit/87e3456))
+
+
+
 <a name="1.1.5"></a>
 ## 1.1.5 (2018-09-11)
 
