@@ -1,6 +1,7 @@
 'use strict'
 
 const pAny = require('p-any')
+const { URL } = require('url')
 const got = require('got')
 
 const createRequest = method => async (url, opts) => {
@@ -19,5 +20,7 @@ const createRequest = method => async (url, opts) => {
 const fromHEAD = createRequest('head')
 const fromGET = createRequest('get')
 
-module.exports = (url, opts = {}) =>
-  pAny([fromHEAD(url, opts), fromGET(url, opts)])
+module.exports = (url, opts = {}) => {
+  const { href } = new URL(url)
+  return pAny([fromHEAD(href, opts), fromGET(href, opts)])
+}

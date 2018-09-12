@@ -1,6 +1,8 @@
 'use strict'
 
+const { URL } = require('url')
 const test = require('ava')
+
 const reachableUrl = require('..')
 
 test('resolve HEAD request', async t => {
@@ -48,4 +50,12 @@ test('passing options', async t => {
     'https://httpbin-org.herokuapp.com/redirect-to?url=http%3A%2F%2Fexample.com%2F'
   const res = await reachableUrl(url, { followRedirect: false })
   t.is(302, res.statusCode)
+})
+
+test('resolve non encoding urls', async t => {
+  const url =
+    'https://www.metro.se/artikel/pr-experterna-s-försöker-ta-kommando-över-svenskhet-i-valfilm'
+  const res = await reachableUrl(url)
+  t.is(res.url, new URL(res.url).href)
+  t.is(200, res.statusCode)
 })
