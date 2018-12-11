@@ -1,3 +1,15 @@
+<a name="1.1.7"></a>
+## 1.1.7 (2018-12-11)
+
+* build: update dependencies ([52aaa05](https://github.com/Kikobeats/reachable-url/commit/52aaa05))
+* Add already encoded case ([54d7608](https://github.com/Kikobeats/reachable-url/commit/54d7608))
+* Add more encoding cases ([6595a11](https://github.com/Kikobeats/reachable-url/commit/6595a11))
+* Add query search test ([b4f1162](https://github.com/Kikobeats/reachable-url/commit/b4f1162))
+* Update package.json ([11f42d0](https://github.com/Kikobeats/reachable-url/commit/11f42d0))
+* Update README.md ([b37539d](https://github.com/Kikobeats/reachable-url/commit/b37539d))
+
+
+
 <a name="1.1.6"></a>
 ## 1.1.6 (2018-09-12)
 
