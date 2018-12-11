@@ -6,7 +6,6 @@
 [![Dependency status](https://img.shields.io/david/Kikobeats/reachable-url.svg?style=flat-square)](https://david-dm.org/Kikobeats/reachable-url)
 [![Dev Dependencies Status](https://img.shields.io/david/dev/Kikobeats/reachable-url.svg?style=flat-square)](https://david-dm.org/Kikobeats/reachable-url#info=devDependencies)
 [![NPM Status](https://img.shields.io/npm/dm/reachable-url.svg?style=flat-square)](https://www.npmjs.org/package/reachable-url)
-[![Donate](https://img.shields.io/badge/donate-paypal-blue.svg?style=flat-square)](https://paypal.me/Kikobeats)
 
 > Given an url resolve it as fast as possible.
 
