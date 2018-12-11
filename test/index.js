@@ -59,3 +59,11 @@ test('resolve non encoding urls', async t => {
   t.is(res.url, new URL(res.url).href)
   t.is(200, res.statusCode)
 })
+
+test('keep original query search', async t => {
+  const url =
+    'https://www.b92.net/biz/vesti/srbija.php?yyyy=2018&mm=11&dd=05&nav_id=1465369'
+  const res = await reachableUrl(url)
+  t.is(res.url, url)
+  t.is(200, res.statusCode)
+})
