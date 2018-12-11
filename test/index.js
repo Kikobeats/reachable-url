@@ -74,6 +74,18 @@ test('resolve non encoding urls', async t => {
   t.is(200, resTwo.statusCode)
 })
 
+test('resolve already encoded urls', async t => {
+  const urlThree =
+    'https://medium.com/@Acegikmo/the-ever-so-lovely-b%C3%A9zier-curve-eb27514da3bf'
+  const resThree = await reachableUrl(urlThree)
+  t.is(resThree.url, new URL(resThree.url).href)
+  t.is(
+    resThree.url,
+    'https://medium.com/@Acegikmo/the-ever-so-lovely-b%C3%A9zier-curve-eb27514da3bf'
+  )
+  t.is(200, resThree.statusCode)
+})
+
 test('keep original query search', async t => {
   const url =
     'https://www.b92.net/biz/vesti/srbija.php?yyyy=2018&mm=11&dd=05&nav_id=1465369'

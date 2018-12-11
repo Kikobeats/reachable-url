@@ -21,6 +21,6 @@ const fromHEAD = createRequest('head')
 const fromGET = createRequest('get')
 
 module.exports = (url, opts = {}) => {
-  const { href } = new URL(url)
-  return pAny([fromHEAD(href, opts), fromGET(href, opts)])
+  const { href: encodedUrl } = new URL(url)
+  return pAny([fromHEAD(encodedUrl, opts), fromGET(encodedUrl, opts)])
 }
