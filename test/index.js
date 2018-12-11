@@ -53,11 +53,25 @@ test('passing options', async t => {
 })
 
 test('resolve non encoding urls', async t => {
-  const url =
+  const urlOne =
     'https://www.metro.se/artikel/pr-experterna-s-försöker-ta-kommando-över-svenskhet-i-valfilm'
-  const res = await reachableUrl(url)
-  t.is(res.url, new URL(res.url).href)
-  t.is(200, res.statusCode)
+  const resOne = await reachableUrl(urlOne)
+  t.is(resOne.url, new URL(resOne.url).href)
+  t.is(
+    resOne.url,
+    'https://www.metro.se/artikel/pr-experterna-s-f%C3%B6rs%C3%B6ker-ta-kommando-%C3%B6ver-svenskhet-i-valfilm'
+  )
+  t.is(200, resOne.statusCode)
+
+  const urlTwo =
+    'https://medium.com/@Acegikmo/the-ever-so-lovely-bézier-curve-eb27514da3bf'
+  const resTwo = await reachableUrl(urlTwo)
+  t.is(resTwo.url, new URL(resTwo.url).href)
+  t.is(
+    resTwo.url,
+    'https://medium.com/@Acegikmo/the-ever-so-lovely-b%C3%A9zier-curve-eb27514da3bf'
+  )
+  t.is(200, resTwo.statusCode)
 })
 
 test('keep original query search', async t => {
