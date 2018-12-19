@@ -1,3 +1,14 @@
+<a name="1.1.8"></a>
+## 1.1.8 (2018-12-19)
+
+* fix(package): update got to version 9.5.0 ([96b5c32](https://github.com/Kikobeats/reachable-url/commit/96b5c32))
+* Update package.json ([ca392e2](https://github.com/Kikobeats/reachable-url/commit/ca392e2))
+* Update README.md ([c6c66bf](https://github.com/Kikobeats/reachable-url/commit/c6c66bf))
+* docs(readme): add Greenkeeper badge ([fa6928b](https://github.com/Kikobeats/reachable-url/commit/fa6928b))
+* chore(package): update dependencies ([c0b5455](https://github.com/Kikobeats/reachable-url/commit/c0b5455))
+
+
+
 <a name="1.1.7"></a>
 ## 1.1.7 (2018-12-11)
 
