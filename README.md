@@ -1,10 +1,7 @@
 # reachable-url
 
 ![Last version](https://img.shields.io/github/tag/Kikobeats/reachable-url.svg?style=flat-square)
-[![Build Status](https://img.shields.io/travis/Kikobeats/reachable-url/master.svg?style=flat-square)](https://travis-ci.org/Kikobeats/reachable-url)
 [![Coverage Status](https://img.shields.io/coveralls/Kikobeats/reachable-url.svg?style=flat-square)](https://coveralls.io/github/Kikobeats/reachable-url)
-[![Dependency status](https://img.shields.io/david/Kikobeats/reachable-url.svg?style=flat-square)](https://david-dm.org/Kikobeats/reachable-url)
-[![Dev Dependencies Status](https://img.shields.io/david/dev/Kikobeats/reachable-url.svg?style=flat-square)](https://david-dm.org/Kikobeats/reachable-url#info=devDependencies)
 [![NPM Status](https://img.shields.io/npm/dm/reachable-url.svg?style=flat-square)](https://www.npmjs.org/package/reachable-url)
 
 > Given an url resolve it as fast as possible.
