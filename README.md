@@ -26,7 +26,7 @@ $ npm install reachable-url --save
 ```js
 ;(async () => {
   const reachableUrl = require('reachable-url')
-  const { url } = await reachableUrl('https://googe.com', { folloRedirects: false })
+  const { url } = await reachableUrl('https://google.com', { followRedirect: false })
 })()
 ```
 
