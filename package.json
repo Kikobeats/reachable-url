@@ -27,7 +27,7 @@
   ],
   "dependencies": {
     "got": "~9.6.0",
-    "p-any": "~1.1.0"
+    "p-any": "~2.0.0"
   },
   "devDependencies": {
     "ava": "latest",
