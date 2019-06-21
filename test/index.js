@@ -5,26 +5,22 @@ const test = require('ava')
 
 const reachableUrl = require('..')
 
-test('resolve HEAD request', async t => {
-  const url = 'https://google.com'
-  const res = await reachableUrl(url)
+const range = n => [...Array(n).keys()]
 
-  t.is(200, res.statusCode)
-  t.is('HEAD', res.req.method)
-})
-
-test('resolve GET request', async t => {
-  const url = 'https://httpbin-org.herokuapp.com/get'
-  const res = await reachableUrl(url)
-
-  t.is(200, res.statusCode)
-  t.is('GET', res.req.method)
+test('resolve HEAD/GET request', async t => {
+  const url = 'https://httpbin.org/get'
+  const promises = range(10).map(() => reachableUrl(url))
+  const results = await Promise.all(promises)
+  const statusCodes = results.map(result => result.statusCode)
+  const methods = results.map(result => result.req.method)
+  t.true(statusCodes.every(value => value === 200))
+  t.true(methods.some(value => value === 'HEAD'))
+  t.true(methods.some(value => value === 'GET'))
 })
 
 test('resolve redirect', async t => {
   const url = 'https://github.com/kikobeats/splashy'
   const res = await reachableUrl(url)
-
   t.deepEqual(res.redirectUrls, ['https://github.com/kikobeats/splashy'])
   t.deepEqual(res.redirectStatusCodes, [301])
   t.is('https://github.com/microlinkhq/splashy', res.url)
@@ -32,34 +28,33 @@ test('resolve redirect', async t => {
 })
 
 test('resolve multiple redirects', async t => {
-  const url = 'https://httpbin-org.herokuapp.com/redirect/3'
+  const url = 'https://httpbin.org/redirect/3'
   const res = await reachableUrl(url)
 
   t.deepEqual(res.redirectUrls, [
-    'https://httpbin-org.herokuapp.com/redirect/3',
-    'https://httpbin-org.herokuapp.com/relative-redirect/2',
-    'https://httpbin-org.herokuapp.com/relative-redirect/1'
+    'https://httpbin.org/redirect/3',
+    'https://httpbin.org/relative-redirect/2',
+    'https://httpbin.org/relative-redirect/1'
   ])
   t.deepEqual(res.redirectStatusCodes, [302, 302, 302])
-  t.is('https://httpbin-org.herokuapp.com/get', res.url)
+  t.is('https://httpbin.org/get', res.url)
   t.is(200, res.statusCode)
 })
 
 test('passing options', async t => {
-  const url =
-    'https://httpbin-org.herokuapp.com/redirect-to?url=http%3A%2F%2Fexample.com%2F'
+  const url = 'https://httpbin.org/redirect-to?url=http%3A%2F%2Fexample.com%2F'
   const res = await reachableUrl(url, { followRedirect: false })
   t.is(302, res.statusCode)
 })
 
 test('resolve non encoding urls', async t => {
   const urlOne =
-    'https://www.metro.se/artikel/pr-experterna-s-försöker-ta-kommando-över-svenskhet-i-valfilm'
+    'https://www.metro.se/nyheter/pr-experterna:-s-forsoker-ta-kommando-over-"svenskhet"-i-valfilm-fZlCYGEtZA'
   const resOne = await reachableUrl(urlOne)
   t.is(resOne.url, new URL(resOne.url).href)
   t.is(
     resOne.url,
-    'https://www.metro.se/artikel/pr-experterna-s-f%C3%B6rs%C3%B6ker-ta-kommando-%C3%B6ver-svenskhet-i-valfilm'
+    'https://www.metro.se/nyheter/pr-experterna:-s-forsoker-ta-kommando-over-%22svenskhet%22-i-valfilm-fZlCYGEtZA'
   )
   t.is(200, resOne.statusCode)
 
