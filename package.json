@@ -45,7 +45,8 @@
     "nyc": "latest",
     "prettier-standard": "latest",
     "standard": "latest",
-    "standard-markdown": "latest"
+    "standard-markdown": "latest",
+    "standard-version": "latest"
   },
   "engines": {
     "node": ">=8"
