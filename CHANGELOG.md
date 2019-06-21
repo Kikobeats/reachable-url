@@ -1,3 +1,80 @@
+# Changelog
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### 1.1.9 (2019-06-21)
+
+
+### Bug Fixes
+
+* **package:** update got to version 9.6.0 ([0a2122b](https://github.com/Kikobeats/reachable-url/commit/0a2122b))
+* **package:** update p-any to version 2.0.0 ([50ce345](https://github.com/Kikobeats/reachable-url/commit/50ce345))
+* **package:** update p-any to version 2.1.0 ([15cdca2](https://github.com/Kikobeats/reachable-url/commit/15cdca2))
+
+
+### Build System
+
+* add automate release ([82e3477](https://github.com/Kikobeats/reachable-url/commit/82e3477))
+* add automate release ([#10](https://github.com/Kikobeats/reachable-url/issues/10)) ([4d08cc5](https://github.com/Kikobeats/reachable-url/commit/4d08cc5))
+* ignore envrc ([bd72cf8](https://github.com/Kikobeats/reachable-url/commit/bd72cf8))
+* update dependencies ([de1e8d6](https://github.com/Kikobeats/reachable-url/commit/de1e8d6))
+
+
+
+### 1.1.8 (2018-12-19)
+
+
+### Bug Fixes
+
+* **package:** update got to version 9.5.0 ([96b5c32](https://github.com/Kikobeats/reachable-url/commit/96b5c32))
+
+
+
+### 1.1.7 (2018-12-11)
+
+
+### Build System
+
+* update dependencies ([52aaa05](https://github.com/Kikobeats/reachable-url/commit/52aaa05))
+
+
+
+### 1.1.6 (2018-09-12)
+
+
+
+### 1.1.5 (2018-09-11)
+
+
+
+### 1.1.4 (2018-09-09)
+
+
+
+### 1.1.3 (2018-08-07)
+
+
+
+### 1.1.2 (2018-07-07)
+
+
+
+### 1.1.1 (2018-07-07)
+
+
+
+## 1.1.0 (2018-07-07)
+
+
+
+### 1.0.1 (2018-05-02)
+
+
+
+## 1.0.0 (2018-05-01)
+
+
+
 <a name="1.1.8"></a>
 ## 1.1.8 (2018-12-19)
 
@@ -85,6 +162,3 @@
 
 * Add files field ([fa46548](https://github.com/Kikobeats/reachable-url/commit/fa46548))
 * First commit ([081f7b0](https://github.com/Kikobeats/reachable-url/commit/081f7b0))
-
-
-
