@@ -30,45 +30,71 @@
     "p-any": "~2.1.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "latest",
+    "@commitlint/config-conventional": "latest",
     "ava": "latest",
+    "ci-publish": "latest",
+    "conventional-github-releaser": "latest",
     "coveralls": "latest",
     "finepack": "latest",
+    "git-authors-cli": "latest",
     "git-dirty": "latest",
     "husky": "latest",
     "lint-staged": "latest",
+    "npm-check-updates": "latest",
     "nyc": "latest",
     "prettier-standard": "latest",
     "standard": "latest",
     "standard-markdown": "latest"
   },
   "engines": {
-    "node": ">= 6"
+    "node": ">=8"
   },
   "files": [
     "index.js"
   ],
   "scripts": {
     "clean": "rm -rf node_modules",
-    "coveralls": "nyc report --reporter=text-lcov | coveralls",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
     "lint": "standard-markdown README.md && standard",
+    "postrelease": "npm run release:tags && npm run release:github && ci-publish --access=public",
     "precommit": "lint-staged",
+    "prerelease": "npm run update:check",
     "pretest": "npm run lint",
-    "pretty": "prettier-standard index.js {core,test,bin}/**/*.js --single-quote",
-    "test": "nyc ava"
+    "preversion": "git-authors-cli && git add package.json",
+    "release": "standard-version -a",
+    "release:github": "conventional-github-releaser -p angular",
+    "release:tags": "git push --follow-tags origin HEAD:master",
+    "test": "nyc ava",
+    "update": "ncu -a",
+    "update:check": "ncu -- --error-level 2"
   },
   "license": "MIT",
-  "lint-staged": {
-    "package.json": [
-      "finepack",
-      "git add"
-    ],
-    "*.js": [
-      "prettier-standard",
-      "git add"
-    ],
-    "*.md": [
-      "standard-markdown",
-      "git add"
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
     ]
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "linters": {
+      "package.json": [
+        "finepack",
+        "git add"
+      ],
+      "*.js": [
+        "prettier-standard",
+        "git add"
+      ],
+      "*.md": [
+        "standard-markdown",
+        "git add"
+      ]
+    }
   }
 }
