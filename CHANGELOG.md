@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/Kikobeats/reachable-url/compare/v1.1.9...v1.2.0) (2019-08-10)
+
+
+### Features
+
+* prefix cdn urls ([b7b3000](https://github.com/Kikobeats/reachable-url/commit/b7b3000))
+
 ### 1.1.9 (2019-06-21)
 
 
