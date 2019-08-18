@@ -27,7 +27,6 @@
   ],
   "dependencies": {
     "got": "~9.6.0",
-    "is-cdn-url": "~1.0.0",
     "p-any": "~2.1.0"
   },
   "devDependencies": {
