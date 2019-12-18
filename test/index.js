@@ -49,34 +49,34 @@ test('passing options', async t => {
 
 test('resolve non encoding urls', async t => {
   const urlOne =
-    'https://www.metro.se/nyheter/pr-experterna:-s-forsoker-ta-kommando-over-"svenskhet"-i-valfilm-fZlCYGEtZA'
+    'https://httpbin.org/anything/pr-experterna:-s-forsoker-ta-kommando-over-"svenskhet"-i-valfilm-fZlCYGEtZA'
   const resOne = await reachableUrl(urlOne)
   t.is(resOne.url, new URL(resOne.url).href)
   t.is(
     resOne.url,
-    'https://www.metro.se/nyheter/pr-experterna:-s-forsoker-ta-kommando-over-%22svenskhet%22-i-valfilm-fZlCYGEtZA'
+    'https://httpbin.org/anything/pr-experterna:-s-forsoker-ta-kommando-over-%22svenskhet%22-i-valfilm-fZlCYGEtZA'
   )
   t.is(200, resOne.statusCode)
 
   const urlTwo =
-    'https://medium.com/@Acegikmo/the-ever-so-lovely-bézier-curve-eb27514da3bf'
+    'https://httpbin.org/anything/@Acegikmo/the-ever-so-lovely-bézier-curve-eb27514da3bf'
   const resTwo = await reachableUrl(urlTwo)
   t.is(resTwo.url, new URL(resTwo.url).href)
   t.is(
     resTwo.url,
-    'https://medium.com/@Acegikmo/the-ever-so-lovely-b%C3%A9zier-curve-eb27514da3bf'
+    'https://httpbin.org/anything/@Acegikmo/the-ever-so-lovely-b%C3%A9zier-curve-eb27514da3bf'
   )
   t.is(200, resTwo.statusCode)
 })
 
 test('resolve already encoded urls', async t => {
   const urlThree =
-    'https://medium.com/@Acegikmo/the-ever-so-lovely-b%C3%A9zier-curve-eb27514da3bf'
+    'https://httpbin.org/anything/@Acegikmo/the-ever-so-lovely-b%C3%A9zier-curve-eb27514da3bf'
   const resThree = await reachableUrl(urlThree)
   t.is(resThree.url, new URL(resThree.url).href)
   t.is(
     resThree.url,
-    'https://medium.com/@Acegikmo/the-ever-so-lovely-b%C3%A9zier-curve-eb27514da3bf'
+    'https://httpbin.org/anything/@Acegikmo/the-ever-so-lovely-b%C3%A9zier-curve-eb27514da3bf'
   )
   t.is(200, resThree.statusCode)
 })
@@ -87,4 +87,11 @@ test('keep original query search', async t => {
   const res = await reachableUrl(url)
   t.is(res.url, url)
   t.is(200, res.statusCode)
+})
+
+test('hanlde unresolved requests', async t => {
+  const url = 'https://demo-1yr5bmtqy.now.sh/'
+  const res = await reachableUrl(url, { timeout: 500 })
+  t.is(res.url, undefined)
+  t.is(res.statusCode, undefined)
 })

@@ -1,7 +1,9 @@
 'use strict'
 
-const pAny = require('p-any')
+const pReflect = require('p-reflect')
+const pTimeout = require('p-timeout')
 const { URL } = require('url')
+const pAny = require('p-any')
 const got = require('got')
 
 const createRequest = method => async (url, opts) => {
@@ -14,7 +16,11 @@ const createRequest = method => async (url, opts) => {
     redirectStatusCodes.push(res.statusCode)
   })
 
-  return { ...(await req), redirectUrls, redirectStatusCodes }
+  const { value: response = {} } = await pReflect(
+    pTimeout(req, opts.timeout || Infinity)
+  )
+
+  return { ...response, redirectUrls, redirectStatusCodes }
 }
 
 const fromHEAD = createRequest('head')
