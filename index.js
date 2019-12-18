@@ -5,7 +5,7 @@ const { URL } = require('url')
 const got = require('got')
 
 const createRequest = method => async (url, opts) => {
-  const req = got[method](url, { encoding: null, ...opts })
+  const req = got[method](url, { encoding: null, retry: 0, ...opts })
   const redirectStatusCodes = []
   const redirectUrls = []
 
