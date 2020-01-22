@@ -3,7 +3,6 @@
 const pReflect = require('p-reflect')
 const pTimeout = require('p-timeout')
 const { URL } = require('url')
-const pAny = require('p-any')
 const got = require('got')
 
 const createRequest = method => async (url, opts) => {
@@ -27,15 +26,12 @@ const createRequest = method => async (url, opts) => {
   }
 }
 
-const fromHEAD = createRequest('head')
-const fromGET = createRequest('get')
+const get = createRequest('get')
 
 module.exports = async (url, opts = {}) => {
   const { href: encodedUrl } = new URL(url)
-  const { isFulfilled, value, error } = await pAny([
-    fromHEAD(encodedUrl, opts),
-    fromGET(encodedUrl, opts)
-  ])
+  const { isFulfilled, value, error } = await get(encodedUrl, opts)
+
   return isFulfilled
     ? value
     : {

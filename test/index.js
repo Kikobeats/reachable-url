@@ -5,17 +5,19 @@ const test = require('ava')
 
 const reachableUrl = require('..')
 
-const range = n => [...Array(n).keys()]
-
-test('resolve HEAD/GET request', async t => {
+test('resolve GET request', async t => {
   const url = 'https://httpbin.org/get'
-  const promises = range(10).map(() => reachableUrl(url))
-  const results = await Promise.all(promises)
-  const statusCodes = results.map(result => result.statusCode)
-  const methods = results.map(result => result.req.method)
-  t.true(statusCodes.every(value => value === 200))
-  t.true(methods.some(value => value === 'HEAD'))
-  t.true(methods.some(value => value === 'GET'))
+  const res = await reachableUrl(url)
+  t.deepEqual(res.redirectUrls, [])
+  t.deepEqual(res.redirectStatusCodes, [])
+  t.is(res.url, url)
+  t.is(200, res.statusCode)
+})
+
+test('resolve prerender GET request', async t => {
+  const url = 'https://www.instagram.com/teslamotors'
+  const res = await reachableUrl(url)
+  t.is(200, res.statusCode)
 })
 
 test('resolve redirect', async t => {
