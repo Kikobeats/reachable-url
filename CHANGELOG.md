@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.4](https://github.com/Kikobeats/reachable-url/compare/v1.2.3...v1.2.4) (2020-01-22)
+
+
+### Build System
+
+* add 404 as fallback status code ([68bbec7](https://github.com/Kikobeats/reachable-url/commit/68bbec7))
+
+
+
 ### [1.2.3](https://github.com/Kikobeats/reachable-url/compare/v1.2.2...v1.2.3) (2020-01-22)
 
 
