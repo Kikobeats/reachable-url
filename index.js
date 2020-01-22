@@ -36,15 +36,14 @@ module.exports = async (url, opts = {}) => {
     fromHEAD(encodedUrl, opts),
     fromGET(encodedUrl, opts)
   ])
-
   return isFulfilled
     ? value
     : {
       redirectStatusCodes: [],
       redirectUrls: [],
-      statusCode: error.statusCode,
-      headers: error.headers,
-      statusMessage: error.statusMessage,
-      url: error.url
+      statusCode: error.statusCode || 404,
+      headers: error.headers || {},
+      statusMessage: error.statusMessage || 'Not Found',
+      url: error.url || url
     }
 }

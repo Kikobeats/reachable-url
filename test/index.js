@@ -87,25 +87,40 @@ test('keep original query search', async t => {
   const res = await reachableUrl(url)
   t.is(res.url, url)
   t.is(200, res.statusCode)
+  t.is(res.statusMessage, 'OK')
+  t.true(Object.keys(res.headers).length > 0)
 })
 
-test('hanlde 404 urls', async t => {
+test('handle 404 urls', async t => {
   const url = 'https://demo-1yr5bmtqy.now.sh/'
   const res = await reachableUrl(url, { timeout: 500 })
-  t.is(res.url, 'https://demo-1yr5bmtqy.now.sh/')
+  t.is(res.url, url)
   t.is(res.statusCode, 404)
+  t.is(res.statusMessage, 'Not Found')
 })
 
-test('hanlde 201 urls', async t => {
+test('handle 201 urls', async t => {
   const url = 'https://httpbin.org/status/201'
   const res = await reachableUrl(url)
-  t.is(res.url, 'https://httpbin.org/status/201')
+  t.is(res.url, url)
   t.is(res.statusCode, 201)
+  t.is(res.statusMessage, 'CREATED')
 })
 
-test('hanlde 500 urls', async t => {
+test('handle 500 urls', async t => {
   const url = 'https://httpbin.org/status/500'
   const res = await reachableUrl(url)
-  t.is(res.url, 'https://httpbin.org/status/500')
+  t.is(res.url, url)
   t.is(res.statusCode, 500)
+  t.is(res.statusMessage, 'INTERNAL SERVER ERROR')
+})
+
+test('handle DNS errors', async t => {
+  const url =
+    'http://android-app/com.twitter.android/twitter/user?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eandroidseo%7Ctwgr%5Eprofile&screen_name=Kikobeats'
+  const res = await reachableUrl(url)
+  t.is(res.url, url)
+  t.is(res.statusCode, 404)
+  t.is(res.statusMessage, 'Not Found')
+  t.is(Object.keys(res.headers).length, 0)
 })
