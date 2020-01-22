@@ -10,7 +10,7 @@ Given an URL, it will be resolved fastest as possible.
 
 It will be performing different HTTP requests in parallel (GET, HEAD) and it will return the first response to respond.
 
-Because of that, don't use this module for consume `body` because it not always be available.
+Don't use this module for consuming `body` since it isn't always be available.
 
 ## Install
 

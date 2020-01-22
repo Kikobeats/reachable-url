@@ -89,9 +89,23 @@ test('keep original query search', async t => {
   t.is(200, res.statusCode)
 })
 
-test('hanlde unresolved requests', async t => {
+test('hanlde 404 urls', async t => {
   const url = 'https://demo-1yr5bmtqy.now.sh/'
   const res = await reachableUrl(url, { timeout: 500 })
-  t.is(res.url, undefined)
-  t.is(res.statusCode, undefined)
+  t.is(res.url, 'https://demo-1yr5bmtqy.now.sh/')
+  t.is(res.statusCode, 404)
+})
+
+test('hanlde 201 urls', async t => {
+  const url = 'https://httpbin.org/status/201'
+  const res = await reachableUrl(url)
+  t.is(res.url, 'https://httpbin.org/status/201')
+  t.is(res.statusCode, 201)
+})
+
+test('hanlde 500 urls', async t => {
+  const url = 'https://httpbin.org/status/500'
+  const res = await reachableUrl(url)
+  t.is(res.url, 'https://httpbin.org/status/500')
+  t.is(res.statusCode, 500)
 })

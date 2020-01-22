@@ -16,17 +16,35 @@ const createRequest = method => async (url, opts) => {
     redirectStatusCodes.push(res.statusCode)
   })
 
-  const { value: response = {} } = await pReflect(
+  const { isFulfilled, value: response = {}, reason: error } = await pReflect(
     pTimeout(req, opts.timeout || Infinity)
   )
 
-  return { ...response, redirectUrls, redirectStatusCodes }
+  return {
+    isFulfilled,
+    value: { ...response, redirectUrls, redirectStatusCodes },
+    error
+  }
 }
 
 const fromHEAD = createRequest('head')
 const fromGET = createRequest('get')
 
-module.exports = (url, opts = {}) => {
+module.exports = async (url, opts = {}) => {
   const { href: encodedUrl } = new URL(url)
-  return pAny([fromHEAD(encodedUrl, opts), fromGET(encodedUrl, opts)])
+  const { isFulfilled, value, error } = await pAny([
+    fromHEAD(encodedUrl, opts),
+    fromGET(encodedUrl, opts)
+  ])
+
+  return isFulfilled
+    ? value
+    : {
+      redirectStatusCodes: [],
+      redirectUrls: [],
+      statusCode: error.statusCode,
+      headers: error.headers,
+      statusMessage: error.statusMessage,
+      url: error.url
+    }
 }
