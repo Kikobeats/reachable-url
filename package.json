@@ -84,16 +84,14 @@
     }
   },
   "lint-staged": {
-    "linters": {
-      "package.json": [
-        "finepack"
-      ],
-      "*.js": [
-        "prettier-standard"
-      ],
-      "*.md": [
-        "standard-markdown"
-      ]
-    }
+    "package.json": [
+      "finepack"
+    ],
+    "*.js": [
+      "prettier-standard"
+    ],
+    "*.md": [
+      "standard-markdown"
+    ]
   }
 }
