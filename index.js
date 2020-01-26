@@ -33,13 +33,13 @@ const wrapRequest = fetch => async (url, opts = {}) => {
   return isFulfilled
     ? value
     : {
-        redirectStatusCodes: [],
-        redirectUrls: [],
-        statusCode: error.statusCode || 404,
-        headers: error.headers || {},
-        statusMessage: error.statusMessage || 'Not Found',
-        url: error.url || url
-      }
+      redirectStatusCodes: [],
+      redirectUrls: [],
+      statusCode: error.statusCode || 404,
+      headers: error.headers || {},
+      statusMessage: error.statusMessage || 'Not Found',
+      url: error.url || url
+    }
 }
 
 const fromGET = wrapRequest(createRequest('get'))
