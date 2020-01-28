@@ -7,7 +7,7 @@ const reachableUrl = require('..')
 
 const { isReachable } = reachableUrl
 
-test.only('resolve GET request', async t => {
+test('resolve GET request', async t => {
   const url = 'https://httpbin.org/get'
   const res = await reachableUrl(url)
   t.deepEqual(res.redirectUrls, [])
