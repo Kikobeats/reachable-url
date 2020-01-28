@@ -1,5 +1,6 @@
 'use strict'
 
+const mql = require('@microlink/mql')
 const { URL } = require('url')
 const test = require('ava')
 
@@ -18,12 +19,14 @@ test('resolve GET request', async t => {
 })
 
 test('resolve HEAD requests', async t => {
-  const url =
-    'https://r3---sn-h5q7kne6.googlevideo.com/videoplayback?expire=1580077455&ei=Lr0tXsbYOYT3xgLT3qyIAQ&ip=88.0.25.71&id=o-ALGvCUB-YHc3EFopGRyEo8yA5CXmWwMA_W7aAlXisgjT&itag=140&source=youtube&requiressl=yes&mm=31%2C26&mn=sn-h5q7kne6%2Csn-aigzrn7d&ms=au%2Conr&mv=m&mvi=2&pl=16&initcwndbps=1136250&vprv=1&mime=audio%2Fmp4&gir=yes&clen=2248120&dur=141.502&lmt=1507952811949144&mt=1580055764&fvip=3&keepalive=yes&fexp=23842630&c=WEB&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cvprv%2Cmime%2Cgir%2Cclen%2Cdur%2Clmt&lsparams=mm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Cinitcwndbps&lsig=AHylml4wRAIgW5DeEEU8ubxNJ1uWksvGwsu8NlAImp6iDS2XDIdtKfoCIE354W9zSElzKPRZHWLdRYqTljSXY9E-eGO_lJH4vf2D&sig=ALgxI2wwRQIhAOXja7uKOOyS-vabn08tHzOMJ-bpwl_5L0LP8n-K-GAFAiBwQMN-M8XNwBBWf8X_r7FOQgweolR_R-f73MYaZ6wXdg==&ratebypass=yes'
+  const { data } = await mql('https://www.youtube.com/watch?v=hwMkbaS_M_c', {
+    audio: true,
+    meta: false
+  })
+  const url = data.audio.url
   const res = await reachableUrl(url, { timeout: 5000 })
-  t.deepEqual(res.redirectUrls, [])
-  t.deepEqual(res.redirectStatusCodes, [])
-  // t.is(res.url, url)g s
+  t.deepEqual(res.redirectUrls.length, 1)
+  t.deepEqual(res.redirectStatusCodes, [302])
   t.is(200, res.statusCode)
   t.true(isReachable(res))
 })
