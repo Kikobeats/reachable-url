@@ -25,8 +25,6 @@ test('resolve HEAD requests', async t => {
   })
   const url = data.audio.url
   const res = await reachableUrl(url, { timeout: 5000 })
-  t.deepEqual(res.redirectUrls.length, 1)
-  t.deepEqual(res.redirectStatusCodes, [302])
   t.is(200, res.statusCode)
   t.true(isReachable(res))
 })
