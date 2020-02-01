@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.4.0](https://github.com/Kikobeats/reachable-url/compare/v1.3.3...v1.4.0) (2020-02-01)
+
+
+### Features
+
+* use got@10 ([5370c48](https://github.com/Kikobeats/reachable-url/commit/5370c4886ebe458d14420cc987a13a0ab811a931))
+
 ### [1.3.3](https://github.com/Kikobeats/reachable-url/compare/v1.3.2...v1.3.3) (2020-01-28)
 
 ### [1.3.2](https://github.com/Kikobeats/reachable-url/compare/v1.3.1...v1.3.2) (2020-01-26)
