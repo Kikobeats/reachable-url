@@ -24,7 +24,7 @@ test('resolve HEAD requests', async t => {
     meta: false
   })
   const url = data.audio.url
-  const res = await reachableUrl(url, { timeout: 5000 })
+  const res = await reachableUrl(url, { timeout: 3000 })
   t.is(200, res.statusCode)
   t.true(isReachable(res))
 })
@@ -115,40 +115,82 @@ test('keep original query search', async t => {
   t.true(isReachable(res))
 })
 
-test('handle 404 urls', async t => {
-  const url = 'https://demo-1yr5bmtqy.now.sh/'
-  const res = await reachableUrl(url, { timeout: 500 })
-  t.is(res.url, url)
-  t.is(res.statusCode, 404)
-  t.is(res.statusMessage, 'Not Found')
-  t.false(isReachable(res))
-})
-
-test('handle 201 urls', async t => {
-  const url = 'https://httpbin.org/status/201'
-  const res = await reachableUrl(url)
-  t.is(res.url, url)
-  t.is(res.statusCode, 201)
-  t.is(res.statusMessage, 'CREATED')
-  t.true(isReachable(res))
-})
-
-test('handle 500 urls', async t => {
-  const url = 'https://httpbin.org/status/500'
-  const res = await reachableUrl(url)
-  t.is(res.url, url)
-  t.is(res.statusCode, 500)
-  t.is(res.statusMessage, 'INTERNAL SERVER ERROR')
-  t.false(isReachable(res))
-})
-
 test('handle DNS errors', async t => {
   const url =
     'http://android-app/com.twitter.android/twitter/user?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eandroidseo%7Ctwgr%5Eprofile&screen_name=Kikobeats'
   const res = await reachableUrl(url)
   t.is(res.url, url)
   t.is(res.statusCode, 404)
-  t.is(res.statusMessage, 'Not Found')
+  t.is(res.statusMessage, 'NOT FOUND')
   t.is(Object.keys(res.headers).length, 0)
   t.false(isReachable(res))
+})
+;[
+  // 100,
+  101,
+  // 102,
+  // 103,
+  200,
+  201,
+  202,
+  203,
+  204,
+  205,
+  206,
+  300,
+  // 301,
+  // 302,
+  // 303,
+  304,
+  305,
+  306,
+  // 307,
+  308,
+  400,
+  401,
+  402,
+  403,
+  404,
+  405,
+  406,
+  407,
+  408,
+  409,
+  410,
+  411,
+  412,
+  413,
+  414,
+  415,
+  416,
+  417,
+  418,
+  421,
+  422,
+  423,
+  425,
+  426,
+  428,
+  429,
+  431,
+  451,
+  500,
+  501,
+  502,
+  503,
+  504,
+  505,
+  506,
+  507,
+  511,
+  520,
+  522,
+  524
+].forEach(statusCode => {
+  test(`HTTP ${statusCode} `, async t => {
+    const url = `https://httpbin.org/status/${statusCode}`
+    const res = await reachableUrl(url, { timeout: 3000 })
+    t.is(res.url, url)
+    t.is(res.statusCode, statusCode)
+  })
 })

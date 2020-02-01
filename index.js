@@ -5,8 +5,14 @@ const pTimeout = require('p-timeout')
 const { URL } = require('url')
 const got = require('got')
 
-const createRequest = method => async (url, opts) => {
-  const req = got[method](url, { encoding: null, retry: 0, ...opts })
+const createFetcher = method => async (url, opts = {}) => {
+  const req = got(url, {
+    responseType: 'buffer',
+    retry: 0,
+    method,
+    ...opts
+  })
+
   const redirectStatusCodes = []
   const redirectUrls = []
 
@@ -20,30 +26,17 @@ const createRequest = method => async (url, opts) => {
   )
 
   return {
-    isFulfilled,
-    value: { ...response, redirectUrls, redirectStatusCodes },
-    error
+    ...{ statusCode: 404, headers: {}, statusMessage: 'NOT FOUND', url },
+    ...(isFulfilled ? response : error.response),
+    redirectUrls,
+    redirectStatusCodes
   }
 }
 
-const wrapRequest = fetch => async (url, opts = {}) => {
-  const { href: encodedUrl } = new URL(url)
-  const { isFulfilled, value, error } = await fetch(encodedUrl, opts)
+const createRequest = fetch => (url, opts) => fetch(url, opts)
 
-  return isFulfilled
-    ? value
-    : {
-      redirectStatusCodes: [],
-      redirectUrls: [],
-      statusCode: error.statusCode || 404,
-      headers: error.headers || {},
-      statusMessage: error.statusMessage || 'Not Found',
-      url: error.url || url
-    }
-}
-
-const fromGET = wrapRequest(createRequest('get'))
-const fromHEAD = wrapRequest(createRequest('head'))
+const fromGET = createRequest(createFetcher('get'))
+const fromHEAD = createRequest(createFetcher('head'))
 
 const isReachable = ({ statusCode }) => statusCode >= 200 && statusCode < 400
 
