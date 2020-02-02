@@ -8,7 +8,6 @@ const got = require('got')
 const createFetcher = method => async (url, opts = {}) => {
   const req = got(url, {
     responseType: 'buffer',
-    retry: 0,
     method,
     ...opts
   })
