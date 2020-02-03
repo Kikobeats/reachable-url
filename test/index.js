@@ -189,7 +189,7 @@ test('handle DNS errors', async t => {
 ].forEach(statusCode => {
   test(`HTTP ${statusCode} `, async t => {
     const url = `https://httpbin.org/status/${statusCode}`
-    const res = await reachableUrl(url, { timeout: 3000 })
+    const res = await reachableUrl(url, { timeout: 15000 })
     t.is(res.url, url)
     t.is(res.statusCode, statusCode)
   })
