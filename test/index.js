@@ -19,7 +19,7 @@ test('resolve GET request', async t => {
 })
 
 test('resolve HEAD requests', async t => {
-  const { data } = await mql('https://www.youtube.com/watch?v=hwMkbaS_M_c', {
+  const { data } = await mql('https://www.youtube.com/watch?v=JHMwdHDtlms', {
     audio: true,
     meta: false
   })
