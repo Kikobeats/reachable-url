@@ -26,7 +26,7 @@
     "url"
   ],
   "dependencies": {
-    "got": "~11.3.0",
+    "got": "~11.4.0",
     "p-reflect": "~2.1.0",
     "p-timeout": "~3.2.0"
   },
@@ -69,7 +69,7 @@
     "release:github": "conventional-github-releaser -p angular",
     "release:tags": "git push --follow-tags origin HEAD:master",
     "test": "nyc ava",
-    "update": "ncu -a",
+    "update": "ncu -u",
     "update:check": "ncu -- --error-level 2"
   },
   "license": "MIT",
