@@ -47,22 +47,23 @@ test('resolve redirect', async t => {
 })
 
 test('resolve multiple redirects', async t => {
-  const url = 'https://httpbin.org/redirect/3'
+  const url =
+    'https://test-redirect-drab.vercel.app/?url=https%3A%2F%2Ftest-redirect-drab.vercel.app%3Furl%3Dhttps%253A%252F%252Ftest-redirect-drab.vercel.app%252F%253Furl%253Dhttps%253A%252F%252Fexample.com'
   const res = await reachableUrl(url)
 
   t.deepEqual(res.redirectUrls, [
-    'https://httpbin.org/redirect/3',
-    'https://httpbin.org/relative-redirect/2',
-    'https://httpbin.org/relative-redirect/1'
+    'https://test-redirect-drab.vercel.app/?url=https%3A%2F%2Ftest-redirect-drab.vercel.app%3Furl%3Dhttps%253A%252F%252Ftest-redirect-drab.vercel.app%252F%253Furl%253Dhttps%253A%252F%252Fexample.com',
+    'https://test-redirect-drab.vercel.app/?url=https%3A%2F%2Ftest-redirect-drab.vercel.app%2F%3Furl%3Dhttps%3A%2F%2Fexample.com',
+    'https://test-redirect-drab.vercel.app/?url=https://example.com'
   ])
   t.deepEqual(res.redirectStatusCodes, [302, 302, 302])
-  t.is('https://httpbin.org/get', res.url)
+  t.is('https://example.com/', res.url)
   t.is(200, res.statusCode)
   t.true(isReachable(res))
 })
 
 test('passing options', async t => {
-  const url = 'https://httpbin.org/redirect-to?url=http%3A%2F%2Fexample.com%2F'
+  const url = 'https://test-redirect-drab.vercel.app?url=http%3A%2F%2Fexample.com%2F'
   const res = await reachableUrl(url, { followRedirect: false })
   t.is(302, res.statusCode)
   t.true(isReachable(res))
