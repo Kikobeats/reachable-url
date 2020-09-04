@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.4.14](https://github.com/Kikobeats/reachable-url/compare/v1.4.13...v1.4.14) (2020-09-04)
+
 ### [1.4.13](https://github.com/Kikobeats/reachable-url/compare/v1.4.12...v1.4.13) (2020-07-18)
 
 ### [1.4.12](https://github.com/Kikobeats/reachable-url/compare/v1.4.11...v1.4.12) (2020-07-12)
