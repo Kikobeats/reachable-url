@@ -26,7 +26,7 @@
     "url"
   ],
   "dependencies": {
-    "got": "~11.7.0",
+    "got": "~11.8.0",
     "p-reflect": "~2.1.0",
     "p-timeout": "~3.2.0"
   },
