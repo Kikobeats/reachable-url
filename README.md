@@ -23,7 +23,7 @@ $ npm install reachable-url --save
 ```js
 const reachableUrl = require('reachable-url')
 
-reachableUrl('https://google.com', reachableUrl.isReachable) // => true
+reachableUrl.isReachable(await reachableUrl('https://google.com')) // => true
 ```
 
 ## API
