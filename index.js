@@ -14,6 +14,16 @@ const createFetcher = method => async (url, opts = {}) => {
 
   const redirectStatusCodes = []
   const redirectUrls = []
+  let statusMessage = 'NOT FOUND'
+  let statusCode = 404
+  let headers = {}
+
+  req.on('response', res => {
+    headers = res.headers
+    statusCode = res.statusCode
+    statusMessage = res.statusMessage
+    res.destroy()
+  })
 
   req.on('redirect', res => {
     redirectUrls.push(res.url)
@@ -25,7 +35,10 @@ const createFetcher = method => async (url, opts = {}) => {
   )
 
   return {
-    ...{ statusCode: 404, headers: {}, statusMessage: 'NOT FOUND', url },
+    url,
+    headers,
+    statusCode,
+    statusMessage,
     ...(isFulfilled ? response : error.response),
     redirectUrls,
     redirectStatusCodes
