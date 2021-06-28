@@ -116,6 +116,16 @@ test('keep original query search', async t => {
   t.true(isReachable(res))
 })
 
+test("ensure to don't download body", async t => {
+  t.timeout(5000)
+  const url = 'http://ftp.nluug.nl/pub/graphics/blender/demo/movies/ToS/ToS-4k-1920.mov'
+  const res = await reachableUrl(url)
+  t.is(res.url, url)
+  t.is(200, res.statusCode)
+  t.is(res.statusMessage, 'OK')
+  t.true(Object.keys(res.headers).length > 0)
+})
+
 test('handle DNS errors', async t => {
   const url =
     'http://android-app/com.twitter.android/twitter/user?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eandroidseo%7Ctwgr%5Eprofile&screen_name=Kikobeats'
