@@ -19,10 +19,10 @@ const createFetcher = method => async (url, opts = {}) => {
   let headers = {}
 
   req.on('response', res => {
+    res.destroy()
     headers = res.headers
     statusCode = res.statusCode
     statusMessage = res.statusMessage
-    res.destroy()
   })
 
   req.on('redirect', res => {
