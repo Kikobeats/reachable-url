@@ -46,9 +46,7 @@
     "nyc": "latest",
     "prettier-standard": "latest",
     "simple-git-hooks": "latest",
-    "standard": "latest",
-    "standard-markdown": "latest",
-    "standard-version": "latest"
+    "standard": "latest"
   },
   "engines": {
     "node": ">=8"
@@ -59,7 +57,7 @@
   "scripts": {
     "clean": "rm -rf node_modules",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
-    "lint": "standard-markdown README.md && standard",
+    "lint": "standard",
     "postrelease": "npm run release:tags && npm run release:github && ci-publish --access=public",
     "precommit": "lint-staged",
     "prerelease": "npm run update:check",
@@ -84,9 +82,6 @@
     ],
     "*.js": [
       "prettier-standard"
-    ],
-    "*.md": [
-      "standard-markdown"
     ]
   },
   "simple-git-hooks": {
