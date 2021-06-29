@@ -21,6 +21,7 @@ test('resolve GET request', async t => {
 test('resolve HEAD requests', async t => {
   const { data } = await mql('https://www.youtube.com/watch?v=JHMwdHDtlms', {
     audio: true,
+    force: true,
     meta: false
   })
   const url = data.audio.url
@@ -117,7 +118,7 @@ test('keep original query search', async t => {
 })
 
 test("ensure to don't download body", async t => {
-  t.timeout(5000)
+  t.timeout(8000)
   const url = 'http://ftp.nluug.nl/pub/graphics/blender/demo/movies/ToS/ToS-4k-1920.mov'
   const res = await reachableUrl(url)
   t.is(res.url, url)
@@ -135,6 +136,12 @@ test('handle DNS errors', async t => {
   t.is(res.statusMessage, 'NOT FOUND')
   t.is(Object.keys(res.headers).length, 0)
   t.false(isReachable(res))
+})
+
+test('keep original request url', async t => {
+  const url = 'http://cdn.jsdelivr.net/npm/@microlink/mql@0.6.11/src/browser.js'
+  const res = await reachableUrl(url)
+  t.is(res.requestUrl, 'http://cdn.jsdelivr.net/npm/@microlink/mql@0.6.11/src/browser.js')
 })
 ;[
   // 100,
