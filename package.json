@@ -37,7 +37,6 @@
     "ava": "latest",
     "ci-publish": "latest",
     "conventional-github-releaser": "latest",
-    "coveralls": "latest",
     "finepack": "latest",
     "git-authors-cli": "latest",
     "git-dirty": "latest",
@@ -56,7 +55,6 @@
   ],
   "scripts": {
     "clean": "rm -rf node_modules",
-    "coverage": "nyc report --reporter=text-lcov | coveralls",
     "lint": "standard",
     "postrelease": "npm run release:tags && npm run release:github && (ci-publish || npm publish --access=public)",
     "precommit": "lint-staged",
