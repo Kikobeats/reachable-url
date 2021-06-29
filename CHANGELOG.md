@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.1](https://github.com/Kikobeats/reachable-url/compare/v1.5.0...v1.5.1) (2021-06-29)
+
+
+### Bug Fixes
+
+* keep original request url ([d259242](https://github.com/Kikobeats/reachable-url/commit/d25924200a78e36fd21c90eee2d63d03c4c799d2))
+
 ## [1.5.0](https://github.com/Kikobeats/reachable-url/compare/v1.4.20...v1.5.0) (2021-06-28)
 
 
