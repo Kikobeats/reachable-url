@@ -5,6 +5,14 @@ const pTimeout = require('p-timeout')
 const { URL } = require('url')
 const got = require('got')
 
+const mergeResponse = (responseOrigin = {}, responseDestination = {}) => ({
+  statusMessage: 'NOT FOUND',
+  statusCode: 404,
+  headers: { ...responseOrigin.headers, ...responseDestination.headers },
+  ...responseOrigin,
+  ...responseDestination
+})
+
 const createFetcher = method => async (url, opts = {}) => {
   const req = got(url, {
     responseType: 'buffer',
@@ -14,15 +22,11 @@ const createFetcher = method => async (url, opts = {}) => {
 
   const redirectStatusCodes = []
   const redirectUrls = []
-  let statusMessage = 'NOT FOUND'
-  let statusCode = 404
-  let headers = {}
+  let response
 
   req.on('response', res => {
+    response = res
     res.destroy()
-    headers = res.headers
-    statusCode = res.statusCode
-    statusMessage = res.statusMessage
   })
 
   req.on('redirect', res => {
@@ -30,18 +34,18 @@ const createFetcher = method => async (url, opts = {}) => {
     redirectStatusCodes.push(res.statusCode)
   })
 
-  const { isFulfilled, value: response = {}, reason: error } = await pReflect(
+  const { isFulfilled, value, reason: error } = await pReflect(
     pTimeout(req, opts.timeout || Infinity)
   )
 
+  const mergedResponse = mergeResponse(isFulfilled ? value : error.response, response)
+
   return {
     url,
-    headers,
-    statusCode,
-    statusMessage,
-    ...(isFulfilled ? response : error.response),
+    ...mergedResponse,
     redirectUrls,
-    redirectStatusCodes
+    redirectStatusCodes,
+    requestUrl: url
   }
 }
 
