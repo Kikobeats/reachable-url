@@ -33,7 +33,6 @@
   "devDependencies": {
     "@commitlint/cli": "latest",
     "@commitlint/config-conventional": "latest",
-    "@microlink/mql": "latest",
     "ava": "latest",
     "ci-publish": "latest",
     "conventional-github-releaser": "latest",

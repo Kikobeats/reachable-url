@@ -1,6 +1,5 @@
 'use strict'
 
-const mql = require('@microlink/mql')
 const { URL } = require('url')
 const test = require('ava')
 
@@ -14,18 +13,6 @@ test('resolve GET request', async t => {
   t.deepEqual(res.redirectUrls, [])
   t.deepEqual(res.redirectStatusCodes, [])
   t.is(res.url, url)
-  t.is(200, res.statusCode)
-  t.true(isReachable(res))
-})
-
-test('resolve HEAD requests', async t => {
-  const { data } = await mql('https://www.youtube.com/watch?v=JHMwdHDtlms', {
-    audio: true,
-    force: true,
-    meta: false
-  })
-  const url = data.audio.url
-  const res = await reachableUrl(url, { timeout: 3000 })
   t.is(200, res.statusCode)
   t.true(isReachable(res))
 })
@@ -133,7 +120,7 @@ test('handle DNS errors', async t => {
   const res = await reachableUrl(url)
   t.is(res.url, url)
   t.is(res.statusCode, 404)
-  t.is(res.statusMessage, 'NOT FOUND')
+  t.is(res.statusMessage, 'Not Found')
   t.is(Object.keys(res.headers).length, 0)
   t.false(isReachable(res))
 })
@@ -142,6 +129,16 @@ test('keep original request url', async t => {
   const url = 'http://cdn.jsdelivr.net/npm/@microlink/mql@0.6.11/src/browser.js'
   const res = await reachableUrl(url)
   t.is(res.requestUrl, 'http://cdn.jsdelivr.net/npm/@microlink/mql@0.6.11/src/browser.js')
+})
+
+test('fast unreachable request resolution', async t => {
+  t.timeout(500)
+  const url =
+    'https://images.weserv.nl/?url=https%3A%2F%2Fwww.politico.com%2Fandroid-chrome-192x192.png&l=9&af=&il=&n=-1&w=400'
+  const res = await reachableUrl(url)
+  t.is(res.url, url)
+  t.is(res.statusCode, 404)
+  t.is(res.statusMessage, 'Not Found')
 })
 ;[
   // 100,

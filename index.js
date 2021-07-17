@@ -6,7 +6,7 @@ const { URL } = require('url')
 const got = require('got')
 
 const mergeResponse = (responseOrigin = {}, responseDestination = {}) => ({
-  statusMessage: 'NOT FOUND',
+  statusMessage: 'Not Found',
   statusCode: 404,
   headers: { ...responseOrigin.headers, ...responseDestination.headers },
   ...responseOrigin,
@@ -17,6 +17,7 @@ const createFetcher = method => async (url, opts = {}) => {
   const req = got(url, {
     responseType: 'buffer',
     method,
+    retry: 0,
     ...opts
   })
 
@@ -52,20 +53,12 @@ const createFetcher = method => async (url, opts = {}) => {
 const createRequest = fetch => (url, opts) => fetch(url, opts)
 
 const fromGET = createRequest(createFetcher('get'))
-const fromHEAD = createRequest(createFetcher('head'))
 
 const isReachable = ({ statusCode }) => statusCode >= 200 && statusCode < 400
 
 module.exports = async (url, opts = {}) => {
   const { href: encodedUrl } = new URL(url)
-
-  const get = await fromGET(encodedUrl, opts)
-  if (isReachable(get)) return get
-
-  const head = await fromHEAD(encodedUrl, opts)
-  if (isReachable(head)) return head
-
-  return head.statusCode < get.statusCode ? head : get
+  return fromGET(encodedUrl, opts)
 }
 
 module.exports.isReachable = isReachable
