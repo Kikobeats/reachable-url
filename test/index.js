@@ -202,10 +202,17 @@ test('fast unreachable request resolution', async t => {
   522,
   524
 ].forEach(statusCode => {
-  test(`HTTP ${statusCode} `, async t => {
+  test(`HTTP ${statusCode}`, async t => {
     const url = `https://httpbin.org/status/${statusCode}`
     const res = await reachableUrl(url, { timeout: 15000 })
     t.is(res.url, url)
     t.is(res.statusCode, statusCode)
   })
+})
+
+test('HTTP 999', async t => {
+  const url = 'https://www.linkedin.com/in/kikobeats'
+  const res = await reachableUrl(url, { timeout: 15000 })
+  t.is(res.url, url)
+  t.is(res.statusCode, 999)
 })
