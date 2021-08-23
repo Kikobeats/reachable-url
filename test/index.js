@@ -131,6 +131,13 @@ test('keep original request url', async t => {
   t.is(res.requestUrl, 'http://cdn.jsdelivr.net/npm/@microlink/mql@0.6.11/src/browser.js')
 })
 
+test('resolve url redirections', async t => {
+  const url =
+    'https://test-redirection.vercel.app/?url=https%3A%2F%2Fmicrolink.io%3Fref%3Dproduchunt'
+  const res = await reachableUrl(url)
+  t.is(res.url, 'https://microlink.io/?ref=produchunt')
+})
+
 test('fast unreachable request resolution', async t => {
   t.timeout(1000)
   const url =
