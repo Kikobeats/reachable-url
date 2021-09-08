@@ -15,10 +15,11 @@ const mergeResponse = (responseOrigin = {}, responseDestination = {}) => ({
 
 const createFetcher = method => async (url, opts = {}) => {
   const req = got(url, {
-    responseType: 'buffer',
-    method,
     retry: 0,
-    ...opts
+    ...opts,
+    decompress: false,
+    responseType: 'buffer',
+    method
   })
 
   const redirectStatusCodes = []
