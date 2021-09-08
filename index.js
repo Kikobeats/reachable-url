@@ -1,7 +1,6 @@
 'use strict'
 
 const pReflect = require('p-reflect')
-const pTimeout = require('p-timeout')
 const { URL } = require('url')
 const got = require('got')
 
@@ -28,7 +27,7 @@ const createFetcher = method => async (url, opts = {}) => {
 
   req.on('response', res => {
     response = res
-    res.destroy()
+    response.once('data', res.destroy)
   })
 
   req.on('redirect', res => {
@@ -36,9 +35,7 @@ const createFetcher = method => async (url, opts = {}) => {
     redirectStatusCodes.push(res.statusCode)
   })
 
-  const { isFulfilled, value, reason: error } = await pReflect(
-    pTimeout(req, opts.timeout || Infinity)
-  )
+  const { isFulfilled, value, reason: error } = await pReflect(req)
 
   const mergedResponse = mergeResponse(isFulfilled ? value : error.response, response)
 
