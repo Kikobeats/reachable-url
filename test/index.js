@@ -139,13 +139,12 @@ test('resolve url redirections', async t => {
 })
 
 test('fast unreachable request resolution', async t => {
-  t.timeout(1500)
-  const url =
-    'https://images.weserv.nl/?url=https%3A%2F%2Fwww.politico.com%2Fandroid-chrome-192x192.png&l=9&af=&il=&n=-1&w=400'
+  t.timeout(1000)
+  const url = 'https://httpbin.org/status/404'
   const res = await reachableUrl(url)
   t.is(res.url, url)
   t.is(res.statusCode, 404)
-  t.is(res.statusMessage, 'Not Found')
+  t.is(res.statusMessage.toLowerCase(), 'not found')
 })
 ;[
   // 100,
