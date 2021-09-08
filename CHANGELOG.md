@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.6.3](https://github.com/Kikobeats/reachable-url/compare/v1.6.2...v1.6.3) (2021-09-08)
+
+
+### Bug Fixes
+
+* abort after first data event ([0167102](https://github.com/Kikobeats/reachable-url/commit/01671027170f9e7a1d6eb54d7f0336e97201bf40))
+
 ### [1.6.2](https://github.com/Kikobeats/reachable-url/compare/v1.6.1...v1.6.2) (2021-09-08)
 
 ### [1.6.1](https://github.com/Kikobeats/reachable-url/compare/v1.6.0...v1.6.1) (2021-09-06)
