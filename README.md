@@ -4,13 +4,7 @@
 [![Coverage Status](https://img.shields.io/coveralls/Kikobeats/reachable-url.svg?style=flat-square)](https://coveralls.io/github/Kikobeats/reachable-url)
 [![NPM Status](https://img.shields.io/npm/dm/reachable-url.svg?style=flat-square)](https://www.npmjs.org/package/reachable-url)
 
-> Given an url resolve it as fast as possible.
-
-Given an URL, it will be resolved fastest as possible.
-
-It will be performing different HTTP requests in parallel (GET, HEAD) and it will return the first response to respond.
-
-Don't use this module for consuming `body` since it isn't always be available.
+> Given an URL, it resolves as fast as possible, performing a GET without downloading the body.
 
 ## Install
 
