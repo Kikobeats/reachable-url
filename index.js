@@ -27,7 +27,7 @@ const createFetcher = method => async (url, opts = {}) => {
 
   req.on('response', res => {
     response = res
-    response.once('data', req.cancel)
+    response.once('data', () => req.cancel())
   })
 
   req.on('redirect', res => {
