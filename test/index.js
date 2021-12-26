@@ -95,7 +95,8 @@ test('resolve already encoded urls', async t => {
 })
 
 test('keep original query search', async t => {
-  const url = 'https://www.b92.net/biz/vesti/srbija.php?yyyy=2018&mm=11&dd=05&nav_id=1465369'
+  const url =
+    'https://www.b92.net/biz/vesti/srbija/dogovoreno-nikola-tesla-primer-aerodromu-u-cg-1465369'
   const res = await reachableUrl(url)
   t.is(res.url, url)
   t.is(200, res.statusCode)
