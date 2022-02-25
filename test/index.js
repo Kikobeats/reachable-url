@@ -140,7 +140,7 @@ test('resolve url redirections', async t => {
 })
 
 test('fast unreachable request resolution', async t => {
-  t.timeout(1000)
+  t.timeout(10000)
   const url = 'https://httpbin.org/status/404'
   const res = await reachableUrl(url)
   t.is(res.url, url)
