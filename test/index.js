@@ -2,6 +2,7 @@
 
 const { URL } = require('url')
 const test = require('ava')
+const got = require('got')
 
 const reachableUrl = require('..')
 
@@ -15,6 +16,38 @@ test('resolve GET request', async t => {
   t.is(res.url, url)
   t.is(200, res.statusCode)
   t.true(isReachable(res))
+})
+
+test('allow to cache', async t => {
+  const url = 'https://microlink.io/favicon.ico'
+  const cache = new Map()
+
+  await got.head(url, { throwHttpErrors: false })
+  await got(url, { throwHttpErrors: false })
+
+  t.is(cache.size, 0)
+
+  const responseOne = await reachableUrl(url, { cache })
+
+  t.is(responseOne.isFromCache, false)
+  t.is(cache.size, 1)
+
+  const responseTwo = await reachableUrl(url, { cache })
+
+  t.is(responseTwo.isFromCache, true)
+  t.is(cache.size, 1)
+})
+
+test('resolve as fast a HEAD', async t => {
+  const url = 'https://microlink.io/favicon.ico'
+
+  const headResponse = await got.head(url, { throwHttpErrors: false })
+  const headTime = headResponse.timings.phases.total
+
+  const getResponse = await reachableUrl(url)
+  const getTime = getResponse.timings.phases.total
+
+  t.true(getTime <= headTime * 2)
 })
 
 test('resolve prerender GET request', async t => {
