@@ -12,13 +12,12 @@ const mergeResponse = (responseOrigin = {}, responseDestination = {}) => ({
   ...responseDestination
 })
 
-const createFetcher = method => async (url, opts = {}) => {
+const reachableUrl = async (url, opts = {}) => {
   const req = got(url, {
-    retry: 0,
     ...opts,
+    retry: 0,
     decompress: false,
-    responseType: 'buffer',
-    method
+    responseType: 'buffer'
   })
 
   const redirectStatusCodes = []
@@ -48,15 +47,8 @@ const createFetcher = method => async (url, opts = {}) => {
   }
 }
 
-const createRequest = fetch => (url, opts) => fetch(url, opts)
-
-const fromGET = createRequest(createFetcher('get'))
-
 const isReachable = ({ statusCode }) => statusCode >= 200 && statusCode < 400
 
-module.exports = async (url, opts = {}) => {
-  const { href: encodedUrl } = new URL(url)
-  return fromGET(encodedUrl, opts)
-}
+module.exports = async (url, opts) => reachableUrl(new URL(url).href, opts)
 
 module.exports.isReachable = isReachable
