@@ -79,7 +79,7 @@ test('2xx', async t => {
   t.is(cache.size, 1)
 })
 
-test.only('static asset', async t => {
+test('static asset', async t => {
   const url = 'https://microlink.io/favicon.ico'
   const cache = new Map()
 
