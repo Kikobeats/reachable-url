@@ -16,7 +16,6 @@ const reachableUrl = async (url, opts = {}) => {
   const req = got(url, {
     ...opts,
     retry: 0,
-    decompress: true,
     responseType: 'buffer'
   })
 
