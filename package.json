@@ -57,7 +57,6 @@
     "contributors": "(git-authors-cli && finepack && git add package.json && git commit -m 'build: contributors' --no-verify) || true",
     "lint": "standard",
     "postrelease": "npm run release:tags && npm run release:github && (ci-publish || npm publish --access=public)",
-    "precommit": "nano-staged",
     "prerelease": "npm run update:check && npm run contributors",
     "pretest": "npm run lint",
     "preversion": "git-authors-cli && git add package.json",
