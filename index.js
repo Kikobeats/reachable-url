@@ -2,7 +2,12 @@
 
 const pReflect = require('p-reflect')
 const { URL } = require('url')
-const got = require('got')
+
+const got = require('got').extend({
+  decompress: false,
+  responseType: 'buffer',
+  retry: 0
+})
 
 const mergeResponse = (responseOrigin = {}, responseDestination = {}) => ({
   statusMessage: 'Not Found',
@@ -12,12 +17,8 @@ const mergeResponse = (responseOrigin = {}, responseDestination = {}) => ({
   ...responseDestination
 })
 
-const reachableUrl = async (url, opts = {}) => {
-  const req = got(url, {
-    ...opts,
-    retry: 0,
-    responseType: 'buffer'
-  })
+const reachableUrl = async (url, opts) => {
+  const req = got(url, opts)
 
   const redirectStatusCodes = []
   const redirectUrls = []

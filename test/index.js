@@ -160,3 +160,12 @@ test('fast unreachable request resolution', async t => {
   t.is(res.statusCode, 404)
   t.is(res.statusMessage.toLowerCase(), 'not found')
 })
+
+test('header `content-length` is present', async t => {
+  const url = 'https://cdn-microlink.vercel.app/file-examples/file_example_CSV_5000.csv'
+  const res = await reachableUrl(url)
+  t.is(res.url, url)
+  t.is(200, res.statusCode)
+  t.is(res.statusMessage, 'OK')
+  t.truthy(res.headers['content-length'])
+})
