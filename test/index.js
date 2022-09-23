@@ -59,7 +59,6 @@ test('resolve multiple redirects', async t => {
   ])
   t.deepEqual(res.redirectStatusCodes, [302, 302, 302])
   t.is('https://example.com/', res.url)
-  t.is(200, res.statusCode)
   t.true(isReachable(res))
 })
 
@@ -112,10 +111,10 @@ test('keep original query search', async t => {
     'https://www.b92.net/biz/vesti/srbija/dogovoreno-nikola-tesla-primer-aerodromu-u-cg-1465369'
   const res = await reachableUrl(url)
   t.is(res.url, url)
-  t.is(200, res.statusCode)
-  t.is(res.statusMessage, 'OK')
-  t.true(Object.keys(res.headers).length > 0)
   t.true(isReachable(res))
+  t.true(Object.keys(res.headers).length > 0)
+  t.truthy(res.headers['content-length'])
+  t.truthy(res.headers['content-range'])
 })
 
 test("ensure to don't download body", async t => {
@@ -123,9 +122,10 @@ test("ensure to don't download body", async t => {
   const url = 'http://ftp.nluug.nl/pub/graphics/blender/demo/movies/ToS/ToS-4k-1920.mov'
   const res = await reachableUrl(url)
   t.is(res.url, url)
-  t.is(200, res.statusCode)
-  t.is(res.statusMessage, 'OK')
+  t.true(isReachable(res))
   t.true(Object.keys(res.headers).length > 0)
+  t.truthy(res.headers['content-length'])
+  t.truthy(res.headers['content-range'])
 })
 
 test('handle DNS errors', async t => {
@@ -157,15 +157,13 @@ test('fast unreachable request resolution', async t => {
   const url = 'https://httpbin.org/status/404'
   const res = await reachableUrl(url)
   t.is(res.url, url)
-  t.is(res.statusCode, 404)
-  t.is(res.statusMessage.toLowerCase(), 'not found')
+  t.false(isReachable(res))
 })
 
 test('header `content-length` is present', async t => {
   const url = 'https://cdn-microlink.vercel.app/file-examples/file_example_CSV_5000.csv'
   const res = await reachableUrl(url)
   t.is(res.url, url)
-  t.is(200, res.statusCode)
-  t.is(res.statusMessage, 'OK')
+  t.true(isReachable(res))
   t.truthy(res.headers['content-length'])
 })

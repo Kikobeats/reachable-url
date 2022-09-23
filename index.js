@@ -6,7 +6,17 @@ const { URL } = require('url')
 const got = require('got').extend({
   decompress: false,
   responseType: 'buffer',
-  retry: 0
+  retry: 1,
+  headers: {
+    Range: 'bytes=0-0'
+  },
+  hooks: {
+    beforeRetry: [
+      options => {
+        delete options.headers.range
+      }
+    ]
+  }
 })
 
 const mergeResponse = (responseOrigin = {}, responseDestination = {}) => ({
@@ -26,7 +36,6 @@ const reachableUrl = async (url, opts) => {
 
   req.on('response', res => {
     response = res
-    response.once('data', () => req.cancel())
   })
 
   req.on('redirect', res => {
