@@ -9,6 +9,16 @@
     "name": "Kiko Beats",
     "url": "https://kikobeats.com"
   },
+  "contributors": [
+    {
+      "name": "Shu Ding",
+      "email": "g@shud.in"
+    },
+    {
+      "name": "Kenrick",
+      "email": "kenrick95@gmail.com"
+    }
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Kikobeats/reachable-url.git"
