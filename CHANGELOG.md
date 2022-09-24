@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.7.0](https://github.com/Kikobeats/reachable-url/compare/v1.6.11...v1.7.0) (2022-09-24)
+
+
+### Bug Fixes
+
+* disable compression ([8fc0826](https://github.com/Kikobeats/reachable-url/commit/8fc08260898d9b923681377fbebb6027d981419d))
+
 ### 1.6.11 (2022-05-17)
 
 ### 1.6.10 (2022-04-12)
