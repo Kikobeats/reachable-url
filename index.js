@@ -47,6 +47,20 @@ const reachableUrl = async (url, opts) => {
 
   const mergedResponse = mergeResponse(isFulfilled ? value : error.response, response)
 
+  if (mergedResponse.statusCode === 206) {
+    const contentRange = mergedResponse.headers['content-range']
+    if (typeof contentRange === 'string') {
+      let contentLength = contentRange.split('/')
+      if (contentLength.length > 1) {
+        contentLength = contentLength[contentLength.length - 1]
+        mergedResponse.statusCode = 200
+        mergedResponse.statusMessage = 'OK'
+        mergedResponse.headers['content-length'] = contentLength
+        mergedResponse.headers['content-range'] = undefined
+      }
+    }
+  }
+
   return {
     url,
     ...mergedResponse,
