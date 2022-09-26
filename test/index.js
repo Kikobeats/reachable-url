@@ -111,21 +111,24 @@ test('keep original query search', async t => {
     'https://www.b92.net/biz/vesti/srbija/dogovoreno-nikola-tesla-primer-aerodromu-u-cg-1465369'
   const res = await reachableUrl(url)
   t.is(res.url, url)
-  t.true(isReachable(res))
+
+  t.is(200, res.statusCode)
+  t.is(res.statusMessage, 'OK')
   t.true(Object.keys(res.headers).length > 0)
   t.truthy(res.headers['content-length'])
-  t.truthy(res.headers['content-range'])
+  t.falsy(res.headers['content-range'])
 })
 
 test("ensure to don't download body", async t => {
-  t.timeout(8000)
+  t.timeout(1000)
   const url = 'http://ftp.nluug.nl/pub/graphics/blender/demo/movies/ToS/ToS-4k-1920.mov'
   const res = await reachableUrl(url)
   t.is(res.url, url)
-  t.true(isReachable(res))
+  t.is(200, res.statusCode)
+  t.is(res.statusMessage, 'OK')
   t.true(Object.keys(res.headers).length > 0)
   t.truthy(res.headers['content-length'])
-  t.truthy(res.headers['content-range'])
+  t.falsy(res.headers['content-range'])
 })
 
 test('handle DNS errors', async t => {
@@ -166,4 +169,5 @@ test('header `content-length` is present', async t => {
   t.is(res.url, url)
   t.true(isReachable(res))
   t.truthy(res.headers['content-length'])
+  t.falsy(res.headers['content-range'])
 })
