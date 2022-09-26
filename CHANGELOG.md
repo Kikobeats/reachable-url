@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 1.7.1 (2022-09-26)
+
 ## [1.7.0](https://github.com/Kikobeats/reachable-url/compare/v1.6.11...v1.7.0) (2022-09-24)
 
 
