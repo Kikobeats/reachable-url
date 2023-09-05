@@ -42,6 +42,7 @@
   "devDependencies": {
     "@commitlint/cli": "latest",
     "@commitlint/config-conventional": "latest",
+    "@ksmithut/prettier-standard": "latest",
     "ava": "latest",
     "c8": "latest",
     "ci-publish": "latest",
@@ -50,7 +51,6 @@
     "git-authors-cli": "latest",
     "nano-staged": "latest",
     "npm-check-updates": "latest",
-    "prettier-standard": "latest",
     "simple-git-hooks": "latest",
     "standard": "latest",
     "standard-markdown": "latest",
@@ -64,7 +64,7 @@
   ],
   "scripts": {
     "clean": "rm -rf node_modules",
-    "contributors": "(git-authors-cli && finepack && git add package.json && git commit -m 'build: contributors' --no-verify) || true",
+    "contributors": "(npx git-authors-cli && npx finepack && git add package.json && git commit -m 'build: contributors' --no-verify) || true",
     "lint": "standard",
     "postrelease": "npm run release:tags && npm run release:github && (ci-publish || npm publish --access=public)",
     "prerelease": "npm run update:check && npm run contributors",
@@ -84,8 +84,9 @@
     ]
   },
   "nano-staged": {
-    "*.js": [
-      "prettier-standard"
+    "*.js,!*.min.js,": [
+      "prettier-standard",
+      "standard --fix"
     ],
     "package.json": [
       "finepack"
