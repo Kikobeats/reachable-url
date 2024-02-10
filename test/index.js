@@ -164,7 +164,7 @@ test('fast unreachable request resolution', async t => {
 })
 
 test('header `content-length` is present', async t => {
-  const url = 'https://cdn-microlink.vercel.app/file-examples/sample.csv'
+  const url = 'https://cdn.microlink.io/file-examples/sample.csv'
   const res = await reachableUrl(url)
   t.is(res.url, url)
   t.true(isReachable(res))
