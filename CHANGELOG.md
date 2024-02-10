@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.8.0](https://github.com/Kikobeats/reachable-url/compare/v1.7.2...v1.8.0) (2024-02-10)
+
+
+### Features
+
+* resolve CDN URLs ([2423f16](https://github.com/Kikobeats/reachable-url/commit/2423f163cdeac87738f7a140949f18dca17b8d2f))
+
 ### 1.7.2 (2023-10-24)
 
 ### 1.7.1 (2022-09-26)
