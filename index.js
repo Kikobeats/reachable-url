@@ -72,6 +72,9 @@ const reachableUrl = async (url, opts) => {
 
 const isReachable = ({ statusCode }) => statusCode >= 200 && statusCode < 400
 
-module.exports = async (url, opts) => reachableUrl(new URL(url).href, opts)
+module.exports = async (url, opts) => {
+  if (/^\/\//.test(url)) url = `https:${url}`
+  return reachableUrl(new URL(url).href, opts)
+}
 
 module.exports.isReachable = isReachable

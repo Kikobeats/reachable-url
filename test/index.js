@@ -155,6 +155,12 @@ test('resolve url redirections', async t => {
   t.is(res.url, 'https://microlink.io/?ref=produchunt')
 })
 
+test('resolve CDN url', async t => {
+  const url = '//yastatic.net/iconostasis/_/wT9gfGZZ80sP0VsoR6dgDyXJf2Y.png'
+  const res = await reachableUrl(url)
+  t.is(res.url, 'https://yastatic.net/iconostasis/_/wT9gfGZZ80sP0VsoR6dgDyXJf2Y.png')
+})
+
 test('fast unreachable request resolution', async t => {
   t.timeout(1000)
   const url = 'https://httpbin.org/status/404'
