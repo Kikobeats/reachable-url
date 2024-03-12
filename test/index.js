@@ -8,6 +8,14 @@ const reachableUrl = require('..')
 
 const { isReachable } = reachableUrl
 
+;['', null, undefined, NaN, 0].forEach(url => {
+  test(`resolve '${url}' as valid but not reachable URL`, async t => {
+    const res = await reachableUrl(url)
+    t.is(res.url, url)
+    t.false(isReachable(res))
+  })
+})
+
 test('resolve GET request', async t => {
   const url = 'https://httpbin.org/get'
   const res = await reachableUrl(url)
