@@ -2,7 +2,7 @@
   "name": "reachable-url",
   "description": "Given an url resolve it as fast as possible",
   "homepage": "https://github.com/Kikobeats/reachable-url",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "main": "index.js",
   "author": {
     "email": "josefrancisco.verdu@gmail.com",
