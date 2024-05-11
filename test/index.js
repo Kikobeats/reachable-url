@@ -108,7 +108,7 @@ test('resolve already encoded urls', async t => {
 
 test('keep original query search', async t => {
   const url =
-    'https://www.b92.net/biz/vesti/srbija/dogovoreno-nikola-tesla-primer-aerodromu-u-cg-1465369'
+    'https://httpbin.org/anything?screenshot&embed=screenshot.url&viewport.deviceScaleFactor=1&force'
   const res = await reachableUrl(url)
   t.is(res.url, url)
 
