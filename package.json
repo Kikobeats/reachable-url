@@ -42,6 +42,7 @@
   "devDependencies": {
     "@commitlint/cli": "latest",
     "@commitlint/config-conventional": "latest",
+    "@kikobeats/cacheable-request": "latest",
     "@ksmithut/prettier-standard": "latest",
     "ava": "latest",
     "c8": "latest",
@@ -96,6 +97,11 @@
     "package.json": [
       "finepack"
     ]
+  },
+  "pnpm": {
+    "overrides": {
+      "got>cacheable-request": "npm:@kikobeats/cacheable-request"
+    }
   },
   "simple-git-hooks": {
     "commit-msg": "npx commitlint --edit",
