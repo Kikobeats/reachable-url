@@ -1,5 +1,7 @@
 'use strict'
 
+const { default: listen } = require('async-listen')
+const { createServer } = require('http')
 const { URL } = require('url')
 const test = require('ava')
 const got = require('got')
@@ -7,6 +9,8 @@ const got = require('got')
 const reachableUrl = require('..')
 
 const { isReachable } = reachableUrl
+
+const closeServer = server => require('util').promisify(server.close.bind(server))()
 
 test('resolve GET request', async t => {
   const url = 'https://httpbin.org/get'
@@ -119,7 +123,7 @@ test('keep original query search', async t => {
   t.falsy(res.headers['content-range'])
 })
 
-test("ensure to don't download body", async t => {
+test("don't download the whole body", async t => {
   t.timeout(1000)
   const url = 'http://ftp.nluug.nl/pub/graphics/blender/demo/movies/ToS/ToS-4k-1920.mov'
   const res = await reachableUrl(url)
@@ -129,6 +133,44 @@ test("ensure to don't download body", async t => {
   t.true(Object.keys(res.headers).length > 0)
   t.truthy(res.headers['content-length'])
   t.falsy(res.headers['content-range'])
+})
+
+test('download jsut the first character from body', async t => {
+  const server = createServer(async (req, res) => {
+    const data = 'Hello, world'
+    const totalLength = Buffer.byteLength(data)
+    const range = req.headers.range
+
+    if (range) {
+      const matches = range.match(/bytes=(\d*)-(\d*)/)
+
+      if (matches) {
+        const start = parseInt(matches[1], 10)
+        const end = matches[2] ? parseInt(matches[2], 10) : totalLength - 1
+
+        if (!isNaN(start) && !isNaN(end) && start <= end && end < totalLength) {
+          const chunk = data.slice(start, end + 1)
+          const chunkLength = Buffer.byteLength(chunk)
+
+          res.writeHead(206, {
+            'Content-Range': `bytes ${start}-${end}/${totalLength}`,
+            'Accept-Ranges': 'bytes',
+            'Content-Length': chunkLength,
+            'Content-Type': 'text/plain'
+          })
+
+          res.end(chunk)
+        }
+      }
+    }
+  })
+
+  const url = await listen(server, { port: 0, host: '127.0.0.1' })
+  t.teardown(() => closeServer(server))
+
+  const res = await reachableUrl(url)
+  t.true(isReachable(res))
+  t.is(res.body.toString(), 'H')
 })
 
 test('handle DNS errors', async t => {
