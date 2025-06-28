@@ -68,7 +68,7 @@
     "contributors": "(npx git-authors-cli && npx finepack && git add package.json && git commit -m 'build: contributors' --no-verify) || true",
     "lint": "standard",
     "postrelease": "npm run release:tags && npm run release:github && (ci-publish || npm publish --access=public)",
-    "prerelease": "npm run update:check && npm run contributors",
+    "prerelease": "npm run contributors",
     "pretest": "npm run lint",
     "preversion": "git-authors-cli && git add package.json",
     "release": "standard-version -a",
@@ -97,6 +97,7 @@
     ]
   },
   "pnpm": {
+    "neverBuiltDependencies": [],
     "overrides": {
       "got>cacheable-request": "npm:@kikobeats/cacheable-request"
     }
