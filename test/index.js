@@ -35,7 +35,7 @@ test('resolve as fast a HEAD', async t => {
 })
 
 test('resolve prerender GET request', async t => {
-  const url = 'https://www.instagram.com/teslamotors'
+  const url = 'https://microlink.io'
   const res = await reachableUrl(url)
   t.is(200, res.statusCode)
   t.true(isReachable(res))
