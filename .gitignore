@@ -33,3 +33,4 @@ coverage
 # Other
 ############################
 .envrc
+scripts/status-codes.json

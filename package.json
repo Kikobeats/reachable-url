@@ -69,11 +69,12 @@
     "lint": "standard",
     "postrelease": "npm run release:tags && npm run release:github && (ci-publish || npm publish --access=public)",
     "prerelease": "npm run contributors",
-    "pretest": "npm run lint",
+    "pretest": "npm run lint && npm run status-codes",
     "preversion": "git-authors-cli && git add package.json",
     "release": "standard-version -a",
     "release:github": "github-generate-release",
     "release:tags": "git push --follow-tags origin HEAD:master",
+    "status-codes": "node scripts/status-codes.js",
     "test": "c8 ava --verbose --serial"
   },
   "license": "MIT",
