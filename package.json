@@ -27,7 +27,7 @@
     "url"
   ],
   "dependencies": {
-    "got": "~11.8.0",
+    "got": "~15.0.0",
     "p-reflect": "~2.1.0"
   },
   "devDependencies": {
