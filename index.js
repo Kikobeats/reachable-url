@@ -40,10 +40,12 @@ const reachableUrl = async (url, opts) => {
     // Range asks for a single byte. If the server honors it (206 + 1 byte),
     // allow that tiny body through. Otherwise abort so we do not buffer the
     // full entity — many servers ignore Range, and beforeRetry also strips it.
+    // Do not cancel 5xx: got retries those, but CancelError is not retryable.
     const contentLength = Number(res.headers['content-length'])
     const isTinyPartial = res.statusCode === 206 && contentLength <= 1
+    const isRetryableStatus = res.statusCode >= 500 && res.statusCode < 600
 
-    if (!isTinyPartial) {
+    if (!isTinyPartial && !isRetryableStatus) {
       req.cancel()
     }
   })
