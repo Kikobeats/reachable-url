@@ -173,6 +173,62 @@ test('download jsut the first character from body', async t => {
   t.is(res.body.toString(), 'H')
 })
 
+test('does not buffer body when server ignores Range', async t => {
+  const payload = Buffer.alloc(2 * 1024 * 1024, 'a')
+  let hits = 0
+
+  const server = createServer((req, res) => {
+    hits++
+    // Intentionally ignore Range and return the full entity.
+    res.writeHead(200, {
+      'Content-Type': 'application/octet-stream',
+      'Content-Length': payload.length
+    })
+    res.end(payload)
+  })
+
+  const url = await listen(server, { port: 0, host: '127.0.0.1' })
+  t.teardown(() => closeServer(server))
+
+  const res = await reachableUrl(url)
+  t.is(res.statusCode, 200)
+  t.true(isReachable(res))
+  t.is(hits, 1)
+  t.true(!res.body || res.body.length < payload.length, 'must not buffer the full response body')
+})
+
+test('does not buffer body after retry strips Range', async t => {
+  const payload = Buffer.alloc(2 * 1024 * 1024, 'b')
+  let hits = 0
+
+  const server = createServer((req, res) => {
+    hits++
+    if (hits === 1) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' })
+      res.end('error')
+      return
+    }
+
+    res.writeHead(200, {
+      'Content-Type': 'application/octet-stream',
+      'Content-Length': payload.length
+    })
+    res.end(payload)
+  })
+
+  const url = await listen(server, { port: 0, host: '127.0.0.1' })
+  t.teardown(() => closeServer(server))
+
+  const res = await reachableUrl(url)
+  t.is(res.statusCode, 200)
+  t.true(isReachable(res))
+  t.is(hits, 2)
+  t.true(
+    !res.body || res.body.length < payload.length,
+    'must not buffer the full response body after retry'
+  )
+})
+
 test('handle DNS errors', async t => {
   const url =
     'http://android-app/com.twitter.android/twitter/user?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eandroidseo%7Ctwgr%5Eprofile&screen_name=Kikobeats'
