@@ -1,6 +1,6 @@
 {
   "name": "reachable-url",
-  "description": "Given an url resolve it as fast as possible",
+  "description": "Resolve a URL as fast as possible and report whether the destination is reachable over HTTP.",
   "homepage": "https://github.com/Kikobeats/reachable-url",
   "version": "1.8.3",
   "main": "index.js",
@@ -18,11 +18,14 @@
     "url": "https://github.com/Kikobeats/reachable-url/issues"
   },
   "keywords": [
-    "accesible",
-    "perform",
+    "check",
+    "health",
+    "http",
+    "ping",
+    "probe",
     "reachability",
     "reachable",
-    "resolution",
+    "redirect",
     "resolve",
     "url"
   ],
@@ -34,7 +37,6 @@
     "@commitlint/cli": "latest",
     "@commitlint/config-conventional": "latest",
     "@kikobeats/cacheable-request": "latest",
-    "@ksmithut/prettier-standard": "latest",
     "async-listen": "latest",
     "ava": "latest",
     "c8": "latest",
@@ -81,7 +83,7 @@
   },
   "nano-staged": {
     "*.js": [
-      "prettier-standard",
+      "npx @kikobeats/prettier-standard",
       "standard --fix"
     ],
     "package.json": [
