@@ -29,7 +29,9 @@ server.listen(0, '127.0.0.1', async () => {
     reachableUrl(url, { cache: new Map() }).then(res => 'OK ' + res.statusCode),
     new Promise(resolve => setTimeout(() => resolve('TIMEOUT'), 5000))
   ])
+  const resolved = require.resolve('cacheable-request', { paths: [require.resolve('got')] })
   console.log(process.platform + ' ' + process.version + ' -> ' + result)
+  console.log('got resolves cacheable-request to: ' + resolved)
   process.exit(0)
 })
 `
@@ -38,6 +40,9 @@ test('cache + keep-alive outside the ava worker', async t => {
   const { stdout } = await promisify(execFile)(process.execPath, ['-e', SCRIPT], {
     timeout: 20000
   })
-  process.stderr.write(`PROBE child-process ${stdout.trim()}\n`)
+  stdout
+    .trim()
+    .split('\n')
+    .forEach(line => process.stderr.write(`PROBE ${line}\n`))
   t.pass()
 })
