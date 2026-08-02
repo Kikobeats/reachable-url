@@ -4,7 +4,12 @@ const { URL } = require('url')
 const test = require('ava').default
 const got = require('got')
 
-const { createEchoServer, createStatusServer, createRangeServer } = require('./_helpers')
+const {
+  createTestServer,
+  createEchoServer,
+  createStatusServer,
+  createRangeServer
+} = require('./_helpers')
 
 const reachableUrl = require('..')
 
@@ -69,6 +74,56 @@ test('passing options', async t => {
   const res = await reachableUrl(url, { followRedirect: false })
   t.is(302, res.statusCode)
   t.true(isReachable(res))
+})
+
+const createRedirectServer = (t, location = () => 'https://example.com') =>
+  createTestServer(t, (req, res) => {
+    res.writeHead(302, { location: location(req) })
+    res.end()
+  })
+
+test('a redirect refused before connecting is not reachable', async t => {
+  const url = await createRedirectServer(t)
+
+  const res = await reachableUrl(url, {
+    hooks: {
+      beforeRedirect: [
+        () => {
+          throw new Error('Refusing to request a reserved address')
+        }
+      ]
+    }
+  })
+
+  t.is(res.statusCode, 302)
+  t.true(res.followRedirect)
+  t.false(isReachable(res))
+})
+
+test('running out of redirects is not reachable', async t => {
+  const url = await createRedirectServer(t, req => (req.url === '/' ? '/next' : '/'))
+
+  const res = await reachableUrl(url, { maxRedirects: 1 })
+
+  t.is(res.statusCode, 302)
+  t.false(isReachable(res))
+})
+
+test('a redirect is the destination when redirects are not followed', async t => {
+  const url = await createRedirectServer(t)
+
+  const res = await reachableUrl(url, { followRedirect: false })
+
+  t.is(res.statusCode, 302)
+  t.false(res.followRedirect)
+  t.true(isReachable(res))
+})
+
+test('isReachable treats a bare redirect status as unfinished', t => {
+  t.true(isReachable({ statusCode: 200 }))
+  t.false(isReachable({ statusCode: 404 }))
+  t.false(isReachable({ statusCode: 302 }))
+  t.true(isReachable({ statusCode: 302, followRedirect: false }))
 })
 
 test('resolve non encoding urls', async t => {

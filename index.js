@@ -28,6 +28,7 @@ const mergeResponse = (responseOrigin = {}, responseDestination = {}) => ({
 })
 
 const reachableUrl = async (url, opts) => {
+  const followRedirect = opts?.followRedirect ?? got.defaults.options.followRedirect
   const req = got(url, opts)
 
   const redirectStatusCodes = []
@@ -64,13 +65,16 @@ const reachableUrl = async (url, opts) => {
   return {
     url,
     ...mergedResponse,
+    followRedirect,
     redirectUrls,
     redirectStatusCodes,
     requestUrl: url
   }
 }
 
-const isReachable = ({ statusCode }) => statusCode >= 200 && statusCode < 400
+// While following, a 3xx is the hop the follow stopped at, never the destination.
+const isReachable = ({ statusCode, followRedirect = true }) =>
+  statusCode >= 200 && statusCode < (followRedirect ? 300 : 400)
 
 module.exports = async (url, opts) => {
   if (/^\/\//.test(url)) url = `https:${url}`
