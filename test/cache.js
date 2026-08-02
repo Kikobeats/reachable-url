@@ -2,8 +2,6 @@
 
 const test = require('ava').default
 
-const { createAssetServer } = require('./_helpers')
-
 const reachableUrl = require('..')
 
 test("don't cache response with no cache-control", async t => {
@@ -77,25 +75,18 @@ test('2xx', async t => {
   t.is(cache.size, 1)
 })
 
+// Stays on a remote asset: `{ cache }` against a keep-alive HTTP/1.1 origin
+// never resolves on Linux, so a local server hangs this test on CI.
 test('static asset', async t => {
-  const trace = msg => process.stderr.write(`TRACE ${msg}\n`)
-  trace('creating server')
-  const url = await createAssetServer(t, {
-    body: 'x'.repeat(1024),
-    cacheControl: 'public, max-age=300',
-    onRequest: req => trace(`server got request range=${req.headers.range}`)
-  })
-  trace(`server listening at ${url}`)
+  const url = 'https://cdn.microlink.io/file-examples/sample.csv'
   const cache = new Map()
 
   const responseOne = await reachableUrl(url, { cache })
-  trace(`one ${responseOne.statusCode} fromCache=${responseOne.isFromCache} size=${cache.size}`)
 
   t.is(responseOne.isFromCache, false)
   t.is(cache.size, 1)
 
   const responseTwo = await reachableUrl(url, { cache })
-  trace(`two ${responseTwo.statusCode} fromCache=${responseTwo.isFromCache} size=${cache.size}`)
 
   t.is(responseTwo.isFromCache, true)
   t.is(cache.size, 1)
