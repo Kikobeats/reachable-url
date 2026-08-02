@@ -73,41 +73,42 @@ const shouldAbortDownload = res =>
 
 // Asking for a range while wanting more of the body than it holds is
 // contradictory: a server honoring it would answer with that one byte.
-const toGotOptions = ({ maxBody, ...opts }) =>
+const toGotOptions = ({ maxBody, ...opts } = {}) =>
   maxBody > RANGE_LENGTH ? { ...opts, headers: { ...opts.headers, Range: undefined } } : opts
+
+const cancelDownload = (req, res) => {
+  // `phases.total` is filled on `end`, which a cancelled request never emits,
+  // and the timer does not record the cancel either.
+  res.timings.phases.total = Date.now() - res.timings.start
+  req.cancel()
+}
 
 const reachableUrl = async (url, opts) => {
   if (opts?.cache) assertCacheSupport()
   const maxBody = opts?.maxBody ?? 0
   const followRedirect = opts?.followRedirect ?? got.defaults.options.followRedirect
-  const req = got(url, toGotOptions({ ...opts }))
+  const req = got(url, toGotOptions(opts))
 
   const redirectStatusCodes = []
   const redirectUrls = []
   let response
-  let body
 
   req.on('response', res => {
     response = res
     if (maxBody === Infinity || !shouldAbortDownload(res)) return
-
-    const abort = () => {
-      // `phases.total` is filled on `end`, which a cancelled request never emits,
-      // and the timer does not record the cancel either.
-      res.timings.phases.total = Date.now() - res.timings.start
-      req.cancel()
-    }
-
-    if (maxBody === 0) return abort()
+    if (maxBody === 0) return cancelDownload(req, res)
 
     const chunks = []
     let read = 0
-    res.on('data', chunk => {
+    // The cancel is not immediate, so chunks already in flight keep arriving.
+    const onData = chunk => {
       chunks.push(chunk)
       if ((read += chunk.length) < maxBody) return
-      body = Buffer.concat(chunks).subarray(0, maxBody)
-      abort()
-    })
+      res.off('data', onData)
+      res.body = Buffer.concat(chunks, maxBody)
+      cancelDownload(req, res)
+    }
+    res.on('data', onData)
   })
 
   req.on('redirect', res => {
@@ -126,8 +127,6 @@ const reachableUrl = async (url, opts) => {
   // is not this response's, so a response we saw outranks the error's. The error
   // still carries one when nothing else did, as MaxRedirects does.
   const resolvedResponse = toResponse(response ?? errorResponse)
-
-  if (body !== undefined) resolvedResponse.body = body
 
   if (resolvedResponse.statusCode === 206) {
     const contentRange = resolvedResponse.headers['content-range']

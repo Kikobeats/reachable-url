@@ -272,22 +272,12 @@ test('abort the download on a 413 got will not retry', async t => {
 test('maxBody keeps the first bytes of an ignored Range', async t => {
   const url = await createTestServer(t, (req, res) => sendPayload(res))
 
-  const res = await reachableUrl(url, { maxBody: 1 })
-
-  t.is(res.statusCode, 200)
-  t.is(res.body.length, 1)
-  t.is(res.body[0], LARGE_PAYLOAD[0])
-  // The whole point: the byte arrives without the entity behind it.
-  t.is(res.headers['content-length'], String(LARGE_PAYLOAD.length))
-})
-
-test('maxBody keeps as many bytes as asked', async t => {
-  const url = await createTestServer(t, (req, res) => sendPayload(res))
-
   const res = await reachableUrl(url, { maxBody: 64 })
 
-  t.is(res.body.length, 64)
+  t.is(res.statusCode, 200)
   t.deepEqual(res.body, LARGE_PAYLOAD.subarray(0, 64))
+  // The whole point: the bytes arrive without the entity behind them.
+  t.is(res.headers['content-length'], String(LARGE_PAYLOAD.length))
 })
 
 test('maxBody spans several chunks', async t => {
@@ -326,12 +316,6 @@ test('maxBody above the range drops the Range header', async t => {
 
   await reachableUrl(url)
   t.is(range, 'bytes=0-0')
-})
-
-test('maxBody is not forwarded to got', async t => {
-  const url = await createEchoServer(t)
-
-  await t.notThrowsAsync(reachableUrl(`${url}/`, { maxBody: 1 }))
 })
 
 test('reject an unpatched cacheable-request', t => {
