@@ -193,6 +193,66 @@ test('download jsut the first character from body', async t => {
   t.is(res.body.toString(), 'H')
 })
 
+const PAYLOAD = 'x'.repeat(256 * 1024)
+
+// The server ignores `Range` and answers with the whole entity.
+const createIgnoreRangeServer = (t, onRequest = () => {}) =>
+  createTestServer(t, (req, res) => {
+    onRequest(req)
+    res.writeHead(200, {
+      'content-type': 'application/octet-stream',
+      'content-length': Buffer.byteLength(PAYLOAD)
+    })
+    res.end(PAYLOAD)
+  })
+
+test('abort the download when the server ignores Range', async t => {
+  let hits = 0
+  const url = await createIgnoreRangeServer(t, () => hits++)
+
+  const res = await reachableUrl(url)
+
+  t.is(res.statusCode, 200)
+  t.true(isReachable(res))
+  t.is(hits, 1)
+  t.is(res.headers['content-length'], String(PAYLOAD.length))
+  t.is(res.body, undefined)
+})
+
+test('abort the download after a retry strips Range', async t => {
+  let hits = 0
+  const url = await createTestServer(t, (req, res) => {
+    if (++hits === 1) {
+      res.writeHead(500, { 'content-type': 'text/plain' })
+      return res.end('error')
+    }
+    res.writeHead(200, {
+      'content-type': 'application/octet-stream',
+      'content-length': Buffer.byteLength(PAYLOAD)
+    })
+    res.end(PAYLOAD)
+  })
+
+  const res = await reachableUrl(url)
+
+  t.is(res.statusCode, 200)
+  t.true(isReachable(res))
+  t.is(hits, 2)
+  t.is(res.body, undefined)
+})
+
+// Caching needs the whole body, so the abort has to stand down for it.
+test('keep the download when caching', async t => {
+  const url = await createIgnoreRangeServer(t)
+  const cache = new Map()
+
+  const res = await reachableUrl(url, { cache })
+
+  t.is(res.statusCode, 200)
+  t.is(res.body.length, PAYLOAD.length)
+  t.is(cache.size, 1)
+})
+
 test('handle DNS errors', async t => {
   const url =
     'http://android-app/com.twitter.android/twitter/user?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eandroidseo%7Ctwgr%5Eprofile&screen_name=Kikobeats'

@@ -35,6 +35,16 @@ The target URL to be resolved.
 
 Same as [got#options](https://github.com/sindresorhus/got#goturl-options)
 
+The request asks for a single byte (`Range: bytes=0-0`). When a server ignores that and starts sending the whole entity, the download is cancelled: the status and headers already say whether the URL is reachable, so `body` is `undefined` on those responses.
+
+Passing `cache` opts out of it, since a cache entry is only written once the body has been read in full:
+
+```js
+const cache = new Map()
+const response = await reachableUrl('https://example.com/video.mp4', { cache })
+response.body // => the whole entity, so it can be cached
+```
+
 ### reachableUrl.isReachable(response)
 
 #### response
