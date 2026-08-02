@@ -90,12 +90,6 @@
       "finepack"
     ]
   },
-  "pnpm": {
-    "neverBuiltDependencies": [],
-    "overrides": {
-      "got>cacheable-request": "npm:@kikobeats/cacheable-request"
-    }
-  },
   "simple-git-hooks": {
     "commit-msg": "npx commitlint --edit",
     "pre-commit": "npx nano-staged"

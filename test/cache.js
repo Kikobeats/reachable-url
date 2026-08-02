@@ -2,6 +2,8 @@
 
 const test = require('ava').default
 
+const { createAssetServer } = require('./_helpers')
+
 const reachableUrl = require('..')
 
 test("don't cache response with no cache-control", async t => {
@@ -75,10 +77,13 @@ test('2xx', async t => {
   t.is(cache.size, 1)
 })
 
-// Any origin sending `Connection: keep-alive` hangs here: @kikobeats/cacheable-request
-// hands got a PassThrough clone that only emits `close` when the source socket closes.
+// Keep-alive is deliberate: upstream cacheable-request hangs on a cached request
+// to a persistent connection, which is what the pnpm override exists to fix.
 test('static asset', async t => {
-  const url = 'https://test-http.vercel.app/?maxAge=300'
+  const url = await createAssetServer(t, {
+    body: 'x'.repeat(1024),
+    cacheControl: 'public, max-age=300'
+  })
   const cache = new Map()
 
   const responseOne = await reachableUrl(url, { cache })
