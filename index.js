@@ -35,11 +35,8 @@ override to your pnpm-workspace.yaml:
   overrides:
     got>cacheable-request: npm:@kikobeats/cacheable-request`
 
-let cacheableRequestManifest
 const loadCacheableRequestManifest = () =>
-  (cacheableRequestManifest ??= require(require.resolve('cacheable-request/package.json', {
-    paths: [require.resolve('got')]
-  })))
+  require(require.resolve('cacheable-request/package.json', { paths: [require.resolve('got')] }))
 
 // The override is an alias, which keeps the real package name, so the manifest says
 // which one got resolved. Only a positive match rejects: the lookup can legitimately
@@ -60,22 +57,19 @@ const willRetry = res => {
     res.retryCount < retry.limit &&
     retry.methods.includes(method) &&
     retry.statusCodes.includes(res.statusCode) &&
-    // got declines a 413 outright unless the response says when to come back.
+    // got declines a 413 outright unless it carries a `retry-after`.
     (res.statusCode !== 413 || res.headers['retry-after'] !== undefined)
   )
 }
 
-// A server is free to ignore `Range` and send the whole entity, which
-// `responseType: 'buffer'` would then buffer in full. Cancelling drops the rest
-// of it: the status and headers already answer whether the URL is reachable. Not
-// when caching, because cacheable-request stores the entry on `end`, which a
-// cancelled response never emits, and not before a retry, because a CancelError
-// is not retryable.
-const shouldAbortDownload = (res, cache) => !cache && !honoredRange(res) && !willRetry(res)
+// `responseType: 'buffer'` would read the whole entity a server sent despite
+// `Range`; the status and headers already answer reachability. A cache entry is
+// written on `end` and a retry needs a retryable error, so both keep the body.
+const shouldAbortDownload = res =>
+  !res.request.options.cache && !honoredRange(res) && !willRetry(res)
 
 const reachableUrl = async (url, opts) => {
-  const cache = opts?.cache
-  if (cache) assertCacheSupport()
+  if (opts?.cache) assertCacheSupport()
   const followRedirect = opts?.followRedirect ?? got.defaults.options.followRedirect
   const req = got(url, opts)
 
@@ -85,7 +79,7 @@ const reachableUrl = async (url, opts) => {
 
   req.on('response', res => {
     response = res
-    if (!shouldAbortDownload(res, cache)) return
+    if (!shouldAbortDownload(res)) return
     // `phases.total` is filled on `end`, which a cancelled request never emits,
     // and the timer does not record the cancel either.
     res.timings.phases.total = Date.now() - res.timings.start
@@ -102,9 +96,9 @@ const reachableUrl = async (url, opts) => {
     error => error
   )
 
-  // Once a response arrived it is the whole truth: a retried or cancelled request
-  // settles with the attempt before it, whose body is not this response's. Only a
-  // failure with no response at all falls back, and MaxRedirects carries one.
+  // A retried or cancelled request settles with the attempt before it, whose body
+  // is not this response's, so a response we saw outranks the error's. The error
+  // still carries one when nothing else did, as MaxRedirects does.
   const mergedResponse = toResponse(response ?? error?.response)
 
   if (mergedResponse.statusCode === 206) {
