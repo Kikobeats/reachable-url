@@ -67,14 +67,48 @@ const willRetry = res => {
 
 // `responseType: 'buffer'` would read the whole entity a server sent despite
 // `Range`; the status and headers already answer reachability. A cache entry is
-// written on `end` and a retry needs a retryable error, so both keep the body.
-const shouldAbortDownload = res =>
-  !res.request.options.cache && !honoredRange(res) && !willRetry(res)
+// written on `end`, a retry needs a retryable error, and `maxBody: Infinity`
+// asked for the entity, so all three keep the body.
+const shouldAbortDownload = (res, maxBody) =>
+  maxBody !== Infinity && !res.request.options.cache && !honoredRange(res) && !willRetry(res)
 
-const reachableUrl = async (url, opts) => {
-  if (opts?.cache) assertCacheSupport()
-  const followRedirect = opts?.followRedirect ?? got.defaults.options.followRedirect
-  const req = got(url, opts)
+// Asking for a range while wanting more of the body than it holds is
+// contradictory: a server honoring it would answer with that one byte.
+const withoutRange = opts => ({ ...opts, headers: { ...opts.headers, Range: undefined } })
+
+const cancelDownload = (req, res) => {
+  // `phases.total` is filled on `end`, which a cancelled request never emits,
+  // and the timer does not record the cancel either.
+  res.timings.phases.total = Date.now() - res.timings.start
+  req.cancel()
+}
+
+const keepFirstBytes = (req, res, maxBody) => {
+  const chunks = []
+  let read = 0
+  // The cancel is not immediate, so chunks already in flight keep arriving.
+  const onData = chunk => {
+    chunks.push(chunk)
+    if ((read += chunk.length) < maxBody) return
+    res.off('data', onData)
+    res.body = Buffer.concat(chunks, maxBody)
+    cancelDownload(req, res)
+  }
+  res.on('data', onData)
+}
+
+// The count reaches `Buffer.concat` inside a stream callback, where a throw is
+// uncatchable, so a value it cannot take is refused before the socket opens.
+const assertMaxBody = maxBody => {
+  if (maxBody === Infinity || (Number.isInteger(maxBody) && maxBody >= 0)) return
+  throw new TypeError('`maxBody` needs to be a non-negative integer or `Infinity`.')
+}
+
+const reachableUrl = async (url, { maxBody = 0, ...opts } = {}) => {
+  assertMaxBody(maxBody)
+  if (opts.cache) assertCacheSupport()
+  const followRedirect = opts.followRedirect ?? got.defaults.options.followRedirect
+  const req = got(url, maxBody > RANGE_LENGTH ? withoutRange(opts) : opts)
 
   const redirectStatusCodes = []
   const redirectUrls = []
@@ -82,11 +116,9 @@ const reachableUrl = async (url, opts) => {
 
   req.on('response', res => {
     response = res
-    if (!shouldAbortDownload(res)) return
-    // `phases.total` is filled on `end`, which a cancelled request never emits,
-    // and the timer does not record the cancel either.
-    res.timings.phases.total = Date.now() - res.timings.start
-    req.cancel()
+    if (!shouldAbortDownload(res, maxBody)) return
+    if (maxBody === 0) return cancelDownload(req, res)
+    keepFirstBytes(req, res, maxBody)
   })
 
   req.on('redirect', res => {

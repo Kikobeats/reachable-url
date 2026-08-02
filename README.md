@@ -33,9 +33,31 @@ The target URL to be resolved.
 
 #### options
 
-Same as [got#options](https://github.com/sindresorhus/got#goturl-options)
+Same as [got#options](https://github.com/sindresorhus/got#goturl-options), plus:
 
-Passing `cache` keeps the whole body, since a cache entry is only written once the body has been read in full:
+##### maxBody
+
+Type: `number`<br>
+Default: `0`
+
+How many bytes of the body to keep when the download would otherwise be cancelled. A non-negative integer or `Infinity`; anything else throws.
+
+The default answers reachability from the status and headers alone, never reading a body. Ask for more when the bytes themselves decide something:
+
+```js
+// one byte is enough to tell an image from an HTML error page served as one
+const response = await reachableUrl('https://example.com/favicon.png', { maxBody: 1 })
+response.body[0] === 60 // => `<`, so the server answered with markup
+```
+
+Asking for more than one byte drops the `Range` header, since a server that honors it would answer with just that byte. `Infinity` is the extreme of that, and keeps the whole entity:
+
+```js
+const response = await reachableUrl('https://example.com/favicon.svg', { maxBody: Infinity })
+response.body // => the whole entity
+```
+
+Passing `cache` keeps the whole body too, since a cache entry is only written once the body has been read in full:
 
 ```js
 const cache = new Map()
@@ -55,7 +77,7 @@ overrides:
 
 The [got response](https://github.com/sindresorhus/got#response), plus `requestUrl`, `redirectUrls`, `redirectStatusCodes` and the `followRedirect` in effect.
 
-The request asks for a single byte (`Range: bytes=0-0`). When a server ignores that and starts sending the whole entity, the download is cancelled: the status and headers already say whether the URL is reachable, so `body` is `undefined` on those responses.
+By default the request asks for a single byte (`Range: bytes=0-0`, which [`maxBody`](#maxbody) drops when it wants more). When a server ignores that and starts sending the whole entity, the download is cancelled: the status and headers already say whether the URL is reachable, so `body` is `undefined` on those responses unless [`maxBody`](#maxbody) asked for some of it.
 
 A `206` that did answer the range is reported as the `200` it stands for, with `content-length` taken from `content-range`.
 

@@ -8,7 +8,8 @@ const {
   createTestServer,
   createEchoServer,
   createStatusServer,
-  createRangeServer
+  createRangeServer,
+  createAssetServer
 } = require('./_helpers')
 
 const reachableUrl = require('..')
@@ -267,6 +268,66 @@ test('abort the download on a 413 got will not retry', async t => {
   t.is(res.statusCode, 413)
   t.is(hits, 1)
   t.is(res.body, undefined)
+})
+
+test('maxBody keeps the first bytes of an ignored Range', async t => {
+  const url = await createTestServer(t, (req, res) => sendPayload(res))
+
+  const res = await reachableUrl(url, { maxBody: 64 })
+
+  t.is(res.statusCode, 200)
+  t.deepEqual(res.body, LARGE_PAYLOAD.subarray(0, 64))
+  // The whole point: the bytes arrive without the entity behind them.
+  t.is(res.headers['content-length'], String(LARGE_PAYLOAD.length))
+})
+
+test('maxBody spans several chunks', async t => {
+  const url = await createTestServer(t, (req, res) => {
+    res.writeHead(200, { 'content-type': 'text/plain', 'content-length': 6 })
+    res.write('ab')
+    setTimeout(() => res.write('cd'), 20)
+    setTimeout(() => res.end('ef'), 40)
+  })
+
+  const res = await reachableUrl(url, { maxBody: 4 })
+
+  t.is(res.body.toString(), 'abcd')
+})
+
+// The count reaches `Buffer.concat` inside a stream callback, where the throw
+// would take the process down instead of the promise.
+test('maxBody rejects a count Buffer cannot take', async t => {
+  for (const maxBody of [-1, 0.5, '1', null, NaN]) {
+    await t.throwsAsync(reachableUrl('https://example.com', { maxBody }), {
+      instanceOf: TypeError
+    })
+  }
+})
+
+test('maxBody leaves an entity that already fits', async t => {
+  const url = await createAssetServer(t, { body: 'ab' })
+
+  const res = await reachableUrl(url, { maxBody: 64 })
+
+  t.is(res.body.toString(), 'ab')
+})
+
+// Asking for one byte while wanting more would have a compliant server answer
+// 206 with that byte, so the range has to go.
+test('maxBody above the range keeps the whole body and drops the Range header', async t => {
+  let range = 'unset'
+  const url = await createTestServer(t, (req, res) => {
+    range = req.headers.range
+    sendPayload(res)
+  })
+
+  const res = await reachableUrl(url, { maxBody: Infinity })
+  t.is(range, undefined)
+  t.is(res.statusCode, 200)
+  t.deepEqual(res.body, LARGE_PAYLOAD)
+
+  await reachableUrl(url)
+  t.is(range, 'bytes=0-0')
 })
 
 test('reject an unpatched cacheable-request', t => {
