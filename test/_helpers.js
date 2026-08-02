@@ -37,6 +37,19 @@ const createAssetServer = (t, { body, cacheControl }) =>
     res.end(body)
   })
 
+const IGNORED_RANGE_PAYLOAD = Buffer.alloc(256 * 1024, 'x')
+
+const createIgnoreRangeServer = (t, onRequest = () => {}) =>
+  createTestServer(t, (req, res) => {
+    onRequest(req, res)
+    if (res.headersSent) return
+    res.writeHead(200, {
+      'content-type': 'application/octet-stream',
+      'content-length': IGNORED_RANGE_PAYLOAD.length
+    })
+    res.end(IGNORED_RANGE_PAYLOAD)
+  })
+
 const createRangeServer = (t, { body }) =>
   createTestServer(t, (req, res) => {
     const totalLength = Buffer.byteLength(body)
@@ -61,9 +74,11 @@ const createRangeServer = (t, { body }) =>
   })
 
 module.exports = {
+  IGNORED_RANGE_PAYLOAD,
   createTestServer,
   createEchoServer,
   createStatusServer,
   createAssetServer,
+  createIgnoreRangeServer,
   createRangeServer
 }

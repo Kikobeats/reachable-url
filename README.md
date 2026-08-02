@@ -50,7 +50,7 @@ response.body // => the whole entity, so it can be cached
 ```yaml
 # pnpm-workspace.yaml
 overrides:
-  'cacheable-request@7': 'npm:@kikobeats/cacheable-request'
+  got>cacheable-request: npm:@kikobeats/cacheable-request
 ```
 
 ### reachableUrl.isReachable(response)

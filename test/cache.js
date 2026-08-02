@@ -2,7 +2,7 @@
 
 const test = require('ava').default
 
-const { createAssetServer } = require('./_helpers')
+const { IGNORED_RANGE_PAYLOAD, createAssetServer, createIgnoreRangeServer } = require('./_helpers')
 
 const reachableUrl = require('..')
 
@@ -94,5 +94,17 @@ test('static asset', async t => {
   const responseTwo = await reachableUrl(url, { cache })
 
   t.is(responseTwo.isFromCache, true)
+  t.is(cache.size, 1)
+})
+
+// Caching needs the whole body, so the abort has to stand down for it.
+test('keep the download when caching', async t => {
+  const url = await createIgnoreRangeServer(t)
+  const cache = new Map()
+
+  const res = await reachableUrl(url, { cache })
+
+  t.is(res.statusCode, 200)
+  t.is(res.body.length, IGNORED_RANGE_PAYLOAD.length)
   t.is(cache.size, 1)
 })

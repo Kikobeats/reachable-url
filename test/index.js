@@ -5,9 +5,11 @@ const test = require('ava').default
 const got = require('got')
 
 const {
+  IGNORED_RANGE_PAYLOAD,
   createTestServer,
   createEchoServer,
   createStatusServer,
+  createIgnoreRangeServer,
   createRangeServer
 } = require('./_helpers')
 
@@ -186,19 +188,6 @@ test('download jsut the first character from body', async t => {
   t.is(res.body.toString(), 'H')
 })
 
-const PAYLOAD = 'x'.repeat(256 * 1024)
-
-// The server ignores `Range` and answers with the whole entity.
-const createIgnoreRangeServer = (t, onRequest = () => {}) =>
-  createTestServer(t, (req, res) => {
-    onRequest(req)
-    res.writeHead(200, {
-      'content-type': 'application/octet-stream',
-      'content-length': Buffer.byteLength(PAYLOAD)
-    })
-    res.end(PAYLOAD)
-  })
-
 test('abort the download when the server ignores Range', async t => {
   let hits = 0
   const url = await createIgnoreRangeServer(t, () => hits++)
@@ -208,22 +197,14 @@ test('abort the download when the server ignores Range', async t => {
   t.is(res.statusCode, 200)
   t.true(isReachable(res))
   t.is(hits, 1)
-  t.is(res.headers['content-length'], String(PAYLOAD.length))
+  t.is(res.headers['content-length'], String(IGNORED_RANGE_PAYLOAD.length))
   t.is(res.body, undefined)
 })
 
 test('abort the download after a retry strips Range', async t => {
   let hits = 0
-  const url = await createTestServer(t, (req, res) => {
-    if (++hits === 1) {
-      res.writeHead(500, { 'content-type': 'text/plain' })
-      return res.end('error')
-    }
-    res.writeHead(200, {
-      'content-type': 'application/octet-stream',
-      'content-length': Buffer.byteLength(PAYLOAD)
-    })
-    res.end(PAYLOAD)
+  const url = await createIgnoreRangeServer(t, (req, res) => {
+    if (++hits === 1) res.writeHead(500, { 'content-type': 'text/plain' }).end('error')
   })
 
   const res = await reachableUrl(url)
@@ -235,8 +216,6 @@ test('abort the download after a retry strips Range', async t => {
 })
 
 test('reject an unpatched cacheable-request', t => {
-  // Upstream is a class exposing `createCacheableRequest`; the patched one is a
-  // plain factory function.
   class Upstream {
     createCacheableRequest () {}
   }
@@ -253,25 +232,12 @@ test('the installed cacheable-request is patched', t => {
   t.notThrows(() => reachableUrl.assertCacheSupport())
 })
 
-// A bundler can make the lookup fail; that must not stop a working setup.
 test('an unresolvable cacheable-request is not rejected', t => {
   t.notThrows(() =>
     reachableUrl.assertCacheSupport(() => {
       throw new Error('Cannot find module')
     })
   )
-})
-
-// Caching needs the whole body, so the abort has to stand down for it.
-test('keep the download when caching', async t => {
-  const url = await createIgnoreRangeServer(t)
-  const cache = new Map()
-
-  const res = await reachableUrl(url, { cache })
-
-  t.is(res.statusCode, 200)
-  t.is(res.body.length, PAYLOAD.length)
-  t.is(cache.size, 1)
 })
 
 test('handle DNS errors', async t => {

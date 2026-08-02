@@ -27,12 +27,6 @@ const mergeResponse = (responseOrigin = {}, responseDestination = {}) => ({
   ...responseDestination
 })
 
-// The unpatched cacheable-request is a class exposing `createCacheableRequest`;
-// the patched one is a plain factory function. Checking the shape rather than
-// the resolved path keeps this working under bundlers and aliases.
-const isPatchedCacheableRequest = CacheableRequest =>
-  typeof CacheableRequest?.prototype?.createCacheableRequest !== 'function'
-
 const CACHE_ERROR = `The \`cache\` option needs @kikobeats/cacheable-request.
 
 got resolved the unpatched cacheable-request@7, which never settles when the
@@ -40,53 +34,63 @@ origin keeps the connection alive, and no timeout recovers from it. Add the
 override to your pnpm-workspace.yaml:
 
   overrides:
-    'cacheable-request@7': 'npm:@kikobeats/cacheable-request'`
+    got>cacheable-request: npm:@kikobeats/cacheable-request`
 
 const loadCacheableRequest = () =>
   require(require.resolve('cacheable-request', { paths: [require.resolve('got')] }))
 
-// Resolution can legitimately fail under a bundler, so an unknown answer counts
-// as patched: refusing to run is worse than missing the warning.
+// The unpatched cacheable-request is a class exposing `createCacheableRequest`; the
+// patched one is a plain factory function. Checking the shape rather than the
+// resolved path keeps this working under bundlers and aliases, where the lookup can
+// legitimately fail: an unknown answer counts as patched, since refusing to run is
+// worse than missing the warning.
 const detectCacheSupport = (load = loadCacheableRequest) => {
   try {
-    return isPatchedCacheableRequest(load())
+    return typeof load()?.prototype?.createCacheableRequest !== 'function'
   } catch {
     return true
   }
 }
 
+// got resolves cacheable-request once, so the answer cannot change afterwards.
+const installedCacheSupport = detectCacheSupport()
+
 const assertCacheSupport = load => {
-  if (!detectCacheSupport(load)) throw new TypeError(CACHE_ERROR)
+  const supported = load === undefined ? installedCacheSupport : detectCacheSupport(load)
+  if (!supported) throw new TypeError(CACHE_ERROR)
 }
 
 const honoredRange = res => res.statusCode === 206 && Number(res.headers['content-length']) <= 1
 
-const isRetryable = res => res.statusCode >= 500 && res.statusCode < 600
+const willRetry = res => res.request.options.retry.statusCodes.includes(res.statusCode)
 
 // `Range: bytes=0-0` asks for one byte, but a server is free to ignore it and
 // send the whole entity, which `responseType: 'buffer'` would then buffer in
 // full. Cancelling drops the rest of it: the status and headers already answer
 // whether the URL is reachable. Not when caching, because cacheable-request
-// stores the entry on `end`, which a cancelled response never emits.
-const shouldAbortDownload = (res, opts) => !opts?.cache && !honoredRange(res) && !isRetryable(res)
+// stores the entry on `end`, which a cancelled response never emits, and not
+// before a retry, because a CancelError is not retryable.
+const shouldAbortDownload = (res, cache) => !cache && !honoredRange(res) && !willRetry(res)
 
 const reachableUrl = async (url, opts) => {
-  if (opts?.cache) assertCacheSupport()
+  const cache = opts?.cache
+  if (cache) assertCacheSupport()
   const followRedirect = opts?.followRedirect ?? got.defaults.options.followRedirect
   const req = got(url, opts)
 
   const redirectStatusCodes = []
   const redirectUrls = []
   let response
-
-  let abortedAt
+  let aborted = false
 
   req.on('response', res => {
     response = res
-    if (shouldAbortDownload(res, opts)) {
-      abortedAt = Date.now()
-      req.cancel()
-    }
+    if (!shouldAbortDownload(res, cache)) return
+    aborted = true
+    // `phases.total` is filled on `end`, which a cancelled request never emits,
+    // and the timer does not record the cancel either.
+    res.timings.phases.total = Date.now() - res.timings.start
+    req.cancel()
   })
 
   req.on('redirect', res => {
@@ -98,17 +102,9 @@ const reachableUrl = async (url, opts) => {
 
   const mergedResponse = mergeResponse(isFulfilled ? value : error.response, response)
 
-  if (abortedAt !== undefined) {
-    // A retried request carries the body of the attempt before it; the one that
-    // was cancelled has none.
-    mergedResponse.body = undefined
-    // `phases.total` is filled on `end`, which a cancelled request never emits,
-    // and the timer does not record the cancel either.
-    const { timings } = mergedResponse
-    if (timings?.phases.total === undefined) {
-      timings.phases.total = abortedAt - timings.start
-    }
-  }
+  // A retried request carries the body of the attempt before it; the one that was
+  // cancelled has none.
+  if (aborted) mergedResponse.body = undefined
 
   if (mergedResponse.statusCode === 206) {
     const contentRange = mergedResponse.headers['content-range']
