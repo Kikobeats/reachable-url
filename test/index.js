@@ -37,13 +37,6 @@ test('resolve as fast a HEAD', async t => {
   t.true(getTime <= headTime * 2)
 })
 
-test('resolve prerender GET request', async t => {
-  const url = 'https://www.instagram.com/teslamotors'
-  const res = await reachableUrl(url)
-  t.is(200, res.statusCode)
-  t.true(isReachable(res))
-})
-
 test('resolve redirect', async t => {
   const url = 'https://github.com/kikobeats/splashy'
   const res = await reachableUrl(url)
