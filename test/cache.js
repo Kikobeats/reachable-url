@@ -75,10 +75,10 @@ test('2xx', async t => {
   t.is(cache.size, 1)
 })
 
-// Stays on a remote asset: `{ cache }` against a keep-alive HTTP/1.1 origin
-// never resolves on Linux, so a local server hangs this test on CI.
+// Any origin sending `Connection: keep-alive` hangs here: @kikobeats/cacheable-request
+// hands got a PassThrough clone that only emits `close` when the source socket closes.
 test('static asset', async t => {
-  const url = 'https://cdn.microlink.io/file-examples/sample.csv'
+  const url = 'https://test-http.vercel.app/?maxAge=300'
   const cache = new Map()
 
   const responseOne = await reachableUrl(url, { cache })
