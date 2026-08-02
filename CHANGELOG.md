@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 2.1.0 (2026-08-02)
+
+
+### Features
+
+* add maxBody to keep part of an aborted download ([#78](https://github.com/Kikobeats/reachable-url/issues/78)) ([7e0c676](https://github.com/Kikobeats/reachable-url/commit/7e0c676257c8831ea3ac0e3703e1231d3ee13eb3))
+
 ## 2.0.0 (2026-08-02)
 
 
