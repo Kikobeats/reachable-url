@@ -8,7 +8,8 @@ const {
   createTestServer,
   createEchoServer,
   createStatusServer,
-  createRangeServer
+  createRangeServer,
+  createAssetServer
 } = require('./_helpers')
 
 const reachableUrl = require('..')
@@ -304,10 +305,7 @@ test('maxBody rejects a count Buffer cannot take', async t => {
 })
 
 test('maxBody leaves an entity that already fits', async t => {
-  const url = await createTestServer(t, (req, res) => {
-    res.writeHead(200, { 'content-type': 'text/plain', 'content-length': 2 })
-    res.end('ab')
-  })
+  const url = await createAssetServer(t, { body: 'ab' })
 
   const res = await reachableUrl(url, { maxBody: 64 })
 
