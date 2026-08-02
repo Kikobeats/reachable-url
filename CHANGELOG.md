@@ -2,6 +2,153 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 2.0.0 (2026-08-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* `body` is `undefined` on responses whose download was
+aborted. Pass `cache` to keep the previous behaviour.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_018JDsM3McLV5LtR3rFd97Sb
+
+* feat: reject the cache option without the patched cacheable-request
+
+The cacheable-request got resolves never settles when the origin keeps
+the connection alive, and got's own timeout does not fire, so the request
+hangs with no stack and nothing to grep for. An override redirects it to
+@kikobeats/cacheable-request, but overrides do not reach consumers of
+this package, and the pnpm one silently stopped applying once pnpm moved
+that setting out of package.json.
+
+Throw instead, naming the override that fixes it. Only when `cache` is
+passed, since that is the only path that hangs.
+
+Detection reads the module shape rather than its resolved path, because a
+path can be rewritten by bundlers and aliases: upstream is a class
+exposing `createCacheableRequest`, the patched one a factory function.
+A lookup that fails counts as patched, since refusing to run a working
+setup is worse than missing the warning.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_018JDsM3McLV5LtR3rFd97Sb
+
+* test: drop the instagram prerender test
+
+instagram.com answers 429 to the shared GitHub Actions IP pool, so the
+test flaps: red on master, green twice earlier the same day. It asserted
+a 200 status and `isReachable`, both already covered by `resolve GET
+request` and the redirect tests, and never asserted anything about
+prerendering.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_018JDsM3McLV5LtR3rFd97Sb
+
+* refactor: simplify the ignored-Range abort
+
+Read got's own retry status codes off the request instead of restating
+5xx, so a caller's `retry` option is honored and 408/413/429 are not
+cancelled mid-retry.
+
+Fill `phases.total` where the cancel happens, which drops the post-hoc
+timings patch. Resolve cacheable-request once at load instead of on every
+cached call. Align the override snippet with pnpm-workspace.yaml.
+
+Move the ignore-Range server into test/_helpers.js as a Buffer payload,
+and the caching test next to its siblings in test/cache.js.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_017hKwmRfQw3NWT7cNheVT2f
+
+* refactor: express the abort condition as got's own retry decision
+
+`willRetry` only mirrored got's status codes, so the final attempt of a
+retryable 5xx was never cancelled: the very case the abort exists for.
+Add the exhaustion and method clauses. A doubled 500 with an 8 MB body
+drops from 16.00 MB to 8.06 MB transferred.
+
+Identify cacheable-request by package name instead of prototype shape.
+The override is an alias, so the manifest names the package it resolved,
+which is what the error message claims; the shape check would misfire if
+the fork ever became a class again.
+
+Take the response from the `response` event rather than merging it over
+the settled value, which carried the previous attempt's fields. Clearing
+`body` left `rawBody` holding the earlier attempt's payload; there is
+nothing left to subtract now.
+
+Fold createIgnoreRangeServer back into createAssetServer.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_017hKwmRfQw3NWT7cNheVT2f
+
+* refactor: drop p-reflect and the test-only server hook
+
+`p-reflect` was down to one destructured field after the response merge
+changed; a native rejection handler is the same line without the runtime
+dependency.
+
+`createAssetServer`'s `intercept` hook was a second dispatch layer over
+the handler `createTestServer` already takes, and the 5xx test answered
+every request through it, leaving the helper's own body path dead. The
+abort tests build their servers directly.
+
+Close the last gap in `willRetry`: got declines a 413 without a
+`retry-after` outright, so that response is abortable too.
+
+Move the `body` note out of the options section into `returns`, next to
+the 206 normalization it sits beside.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_017hKwmRfQw3NWT7cNheVT2f
+
+* refactor: read the cache option off the request
+
+Every other clause of `shouldAbortDownload` is a fact about the response;
+`cache` was threaded in from the call site, so the predicate was partial
+over its own subject. got's normalized options carry it.
+
+Drop the manifest memo: it saved 4us on calls that pass `cache`, at the
+price of module-level mutable state.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_017hKwmRfQw3NWT7cNheVT2f
+
+* refactor: name the requested range length
+
+`bytes=0-0` and the `<= 1` in honoredRange were the same fact written
+twice, with nothing tying them together.
+
+Bind only the response the rejection carries, and call the result what it
+is now that nothing is merged.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_017hKwmRfQw3NWT7cNheVT2f
+
+* refactor: bind only the response a rejection carries
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_017hKwmRfQw3NWT7cNheVT2f
+
+* test: make 'resolve as fast a HEAD' deterministic
+
+It compared two live requests to edge-ping.vercel.app on wall clock with
+a 2x margin and a single sample, so CI jitter alone could fail it. That
+is what happened on e17b2ca.
+
+A local server that announces a body and never sends it states the same
+claim without a clock race: the call has to resolve at the headers. On
+master it hangs to the timeout and retries, 7077ms and two hits; here it
+is 8ms and one.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_017hKwmRfQw3NWT7cNheVT2f
+
+### Bug Fixes
+
+* abort the download when a server ignores Range ([#77](https://github.com/Kikobeats/reachable-url/issues/77)) ([d6f7a3c](https://github.com/Kikobeats/reachable-url/commit/d6f7a3c9d38ff60679c4eedbc72cb71cb4748b3b))
+
 ### 1.8.4 (2026-08-02)
 
 
