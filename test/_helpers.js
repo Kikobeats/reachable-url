@@ -32,10 +32,12 @@ const createAssetServer = (t, { body, cacheControl }) =>
     res.writeHead(200, {
       'content-type': 'text/plain',
       'content-length': Buffer.byteLength(body),
-      'cache-control': cacheControl
+      ...(cacheControl && { 'cache-control': cacheControl })
     })
     res.end(body)
   })
+
+const LARGE_PAYLOAD = Buffer.alloc(256 * 1024, 'x')
 
 const createRangeServer = (t, { body }) =>
   createTestServer(t, (req, res) => {
@@ -61,6 +63,7 @@ const createRangeServer = (t, { body }) =>
   })
 
 module.exports = {
+  LARGE_PAYLOAD,
   createTestServer,
   createEchoServer,
   createStatusServer,

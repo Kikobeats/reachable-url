@@ -30,8 +30,7 @@
     "url"
   ],
   "dependencies": {
-    "got": "~11.8.0",
-    "p-reflect": "~2.1.0"
+    "got": "~11.8.0"
   },
   "devDependencies": {
     "@commitlint/cli": "latest",

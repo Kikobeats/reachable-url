@@ -35,6 +35,30 @@ The target URL to be resolved.
 
 Same as [got#options](https://github.com/sindresorhus/got#goturl-options)
 
+Passing `cache` keeps the whole body, since a cache entry is only written once the body has been read in full:
+
+```js
+const cache = new Map()
+const response = await reachableUrl('https://example.com/video.mp4', { cache })
+response.body // => the whole entity, so it can be cached
+```
+
+`cache` needs [@kikobeats/cacheable-request](https://github.com/Kikobeats/cacheable-request): the version [got](https://github.com/sindresorhus/got) pulls in never settles when the origin keeps the connection alive, and no timeout recovers from it. Declare the override, otherwise passing `cache` throws:
+
+```yaml
+# pnpm-workspace.yaml
+overrides:
+  got>cacheable-request: npm:@kikobeats/cacheable-request
+```
+
+#### returns
+
+The [got response](https://github.com/sindresorhus/got#response), plus `requestUrl`, `redirectUrls`, `redirectStatusCodes` and the `followRedirect` in effect.
+
+The request asks for a single byte (`Range: bytes=0-0`). When a server ignores that and starts sending the whole entity, the download is cancelled: the status and headers already say whether the URL is reachable, so `body` is `undefined` on those responses.
+
+A `206` that did answer the range is reported as the `200` it stands for, with `content-length` taken from `content-range`.
+
 ### reachableUrl.isReachable(response)
 
 #### response

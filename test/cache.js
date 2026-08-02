@@ -2,7 +2,7 @@
 
 const test = require('ava').default
 
-const { createAssetServer } = require('./_helpers')
+const { LARGE_PAYLOAD, createAssetServer } = require('./_helpers')
 
 const reachableUrl = require('..')
 
@@ -94,5 +94,16 @@ test('static asset', async t => {
   const responseTwo = await reachableUrl(url, { cache })
 
   t.is(responseTwo.isFromCache, true)
+  t.is(cache.size, 1)
+})
+
+test('keep the download when caching', async t => {
+  const url = await createAssetServer(t, { body: LARGE_PAYLOAD })
+  const cache = new Map()
+
+  const res = await reachableUrl(url, { cache })
+
+  t.is(res.statusCode, 200)
+  t.is(res.body.length, LARGE_PAYLOAD.length)
   t.is(cache.size, 1)
 })

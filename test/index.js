@@ -2,9 +2,9 @@
 
 const { URL } = require('url')
 const test = require('ava').default
-const got = require('got')
 
 const {
+  LARGE_PAYLOAD,
   createTestServer,
   createEchoServer,
   createStatusServer,
@@ -25,23 +25,28 @@ test('resolve GET request', async t => {
   t.true(isReachable(res))
 })
 
+// The range request exists so a GET resolves at the headers, the way a HEAD does.
+// A server that announces a body and never sends it would otherwise hold the call
+// open until the timeout, once per attempt.
 test('resolve as fast a HEAD', async t => {
-  const url = 'https://edge-ping.vercel.app/'
+  let hits = 0
+  const timeout = 1000
+  const url = await createTestServer(t, (req, res) => {
+    hits++
+    res.writeHead(200, {
+      'content-type': 'application/octet-stream',
+      'content-length': LARGE_PAYLOAD.length
+    })
+    res.write(LARGE_PAYLOAD.subarray(0, 1))
+  })
 
-  const headResponse = await got.head(url, { throwHttpErrors: false })
-  const headTime = headResponse.timings.phases.total
+  const res = await reachableUrl(url, { timeout })
 
-  const getResponse = await reachableUrl(url)
-  const getTime = getResponse.timings.phases.total
-
-  t.true(getTime <= headTime * 2)
-})
-
-test('resolve prerender GET request', async t => {
-  const url = 'https://www.instagram.com/teslamotors'
-  const res = await reachableUrl(url)
-  t.is(200, res.statusCode)
+  t.is(res.statusCode, 200)
   t.true(isReachable(res))
+  t.is(hits, 1)
+  t.is(res.body, undefined)
+  t.true(res.timings.phases.total < timeout)
 })
 
 test('resolve redirect', async t => {
@@ -191,6 +196,97 @@ test('download jsut the first character from body', async t => {
   const res = await reachableUrl(url)
   t.true(isReachable(res))
   t.is(res.body.toString(), 'H')
+})
+
+// The server never reads `Range`, so it always answers with the whole entity.
+const sendPayload = (res, statusCode = 200) => {
+  res.writeHead(statusCode, {
+    'content-type': 'application/octet-stream',
+    'content-length': LARGE_PAYLOAD.length
+  })
+  res.end(LARGE_PAYLOAD)
+}
+
+test('abort the download when the server ignores Range', async t => {
+  let hits = 0
+  const url = await createTestServer(t, (req, res) => {
+    hits++
+    sendPayload(res)
+  })
+
+  const res = await reachableUrl(url)
+
+  t.is(res.statusCode, 200)
+  t.true(isReachable(res))
+  t.is(hits, 1)
+  t.is(res.headers['content-length'], String(LARGE_PAYLOAD.length))
+  t.is(res.body, undefined)
+})
+
+test('abort the download after a retry strips Range', async t => {
+  let hits = 0
+  const url = await createTestServer(t, (req, res) => {
+    if (++hits === 1) return res.writeHead(500, { 'content-type': 'text/plain' }).end('error')
+    sendPayload(res)
+  })
+
+  const res = await reachableUrl(url)
+
+  t.is(res.statusCode, 200)
+  t.true(isReachable(res))
+  t.is(hits, 2)
+  t.is(res.body, undefined)
+})
+
+// got stops retrying once the limit is reached, so the last attempt is abortable
+// even though its status is in `retry.statusCodes`.
+test('abort the download on a 5xx got will not retry', async t => {
+  let hits = 0
+  const url = await createTestServer(t, (req, res) => {
+    hits++
+    sendPayload(res, 500)
+  })
+
+  const res = await reachableUrl(url)
+
+  t.is(res.statusCode, 500)
+  t.false(isReachable(res))
+  t.is(hits, 2)
+  t.is(res.body, undefined)
+})
+
+test('abort the download on a 413 got will not retry', async t => {
+  let hits = 0
+  const url = await createTestServer(t, (req, res) => {
+    hits++
+    sendPayload(res, 413)
+  })
+
+  const res = await reachableUrl(url)
+
+  t.is(res.statusCode, 413)
+  t.is(hits, 1)
+  t.is(res.body, undefined)
+})
+
+test('reject an unpatched cacheable-request', t => {
+  const error = t.throws(
+    () => reachableUrl.assertCacheSupport(() => ({ name: 'cacheable-request' })),
+    { instanceOf: TypeError }
+  )
+  t.regex(error.message, /@kikobeats\/cacheable-request/)
+})
+
+test('the installed cacheable-request is patched', t => {
+  t.notThrows(() => reachableUrl.assertCacheSupport())
+})
+
+test('an unresolvable cacheable-request is not rejected', t => {
+  t.notThrows(() =>
+    reachableUrl.assertCacheSupport(() => {
+      throw new Error('Cannot find module')
+    })
+  )
 })
 
 test('handle DNS errors', async t => {
