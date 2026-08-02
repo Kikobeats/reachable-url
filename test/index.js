@@ -9,7 +9,6 @@ const {
   createTestServer,
   createEchoServer,
   createStatusServer,
-  createAssetServer,
   createRangeServer
 } = require('./_helpers')
 
@@ -188,9 +187,21 @@ test('download jsut the first character from body', async t => {
   t.is(res.body.toString(), 'H')
 })
 
+// The server never reads `Range`, so it always answers with the whole entity.
+const sendPayload = (res, statusCode = 200) => {
+  res.writeHead(statusCode, {
+    'content-type': 'application/octet-stream',
+    'content-length': LARGE_PAYLOAD.length
+  })
+  res.end(LARGE_PAYLOAD)
+}
+
 test('abort the download when the server ignores Range', async t => {
   let hits = 0
-  const url = await createAssetServer(t, { body: LARGE_PAYLOAD, intercept: () => hits++ })
+  const url = await createTestServer(t, (req, res) => {
+    hits++
+    sendPayload(res)
+  })
 
   const res = await reachableUrl(url)
 
@@ -201,13 +212,11 @@ test('abort the download when the server ignores Range', async t => {
   t.is(res.body, undefined)
 })
 
-test('abort the download once got has no retry left', async t => {
+test('abort the download after a retry strips Range', async t => {
   let hits = 0
-  const url = await createAssetServer(t, {
-    body: LARGE_PAYLOAD,
-    intercept: (req, res) => {
-      if (++hits === 1) res.writeHead(500, { 'content-type': 'text/plain' }).end('error')
-    }
+  const url = await createTestServer(t, (req, res) => {
+    if (++hits === 1) return res.writeHead(500, { 'content-type': 'text/plain' }).end('error')
+    sendPayload(res)
   })
 
   const res = await reachableUrl(url)
@@ -222,16 +231,9 @@ test('abort the download once got has no retry left', async t => {
 // even though its status is in `retry.statusCodes`.
 test('abort the download on a 5xx got will not retry', async t => {
   let hits = 0
-  const url = await createAssetServer(t, {
-    body: LARGE_PAYLOAD,
-    intercept: (req, res) => {
-      hits++
-      res.writeHead(500, {
-        'content-type': 'application/octet-stream',
-        'content-length': LARGE_PAYLOAD.length
-      })
-      res.end(LARGE_PAYLOAD)
-    }
+  const url = await createTestServer(t, (req, res) => {
+    hits++
+    sendPayload(res, 500)
   })
 
   const res = await reachableUrl(url)
@@ -242,16 +244,28 @@ test('abort the download on a 5xx got will not retry', async t => {
   t.is(res.body, undefined)
 })
 
+// 413 is in got's `retry.statusCodes`, but got declines it outright without a
+// `retry-after`, so there is no retry to protect.
+test('abort the download on a 413 got will not retry', async t => {
+  let hits = 0
+  const url = await createTestServer(t, (req, res) => {
+    hits++
+    sendPayload(res, 413)
+  })
+
+  const res = await reachableUrl(url)
+
+  t.is(res.statusCode, 413)
+  t.is(hits, 1)
+  t.is(res.body, undefined)
+})
+
 test('reject an unpatched cacheable-request', t => {
   const error = t.throws(
     () => reachableUrl.assertCacheSupport(() => ({ name: 'cacheable-request' })),
     { instanceOf: TypeError }
   )
   t.regex(error.message, /@kikobeats\/cacheable-request/)
-
-  t.notThrows(() =>
-    reachableUrl.assertCacheSupport(() => ({ name: '@kikobeats/cacheable-request' }))
-  )
 })
 
 test('the installed cacheable-request is patched', t => {

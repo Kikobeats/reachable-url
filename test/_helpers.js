@@ -27,12 +27,8 @@ const createStatusServer = (t, statusCode) =>
     res.end()
   })
 
-// `Range` is ignored, so the whole body is always served. `intercept` can answer
-// the request itself to take over an attempt.
-const createAssetServer = (t, { body, cacheControl, intercept = () => {} }) =>
+const createAssetServer = (t, { body, cacheControl }) =>
   createTestServer(t, (req, res) => {
-    intercept(req, res)
-    if (res.headersSent) return
     res.writeHead(200, {
       'content-type': 'text/plain',
       'content-length': Buffer.byteLength(body),

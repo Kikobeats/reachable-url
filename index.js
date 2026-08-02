@@ -1,6 +1,5 @@
 'use strict'
 
-const pReflect = require('p-reflect')
 const { URL } = require('url')
 
 const got = require('got').extend({
@@ -20,11 +19,11 @@ const got = require('got').extend({
 })
 
 // `headers` is a prototype getter on IncomingMessage, so spreading never carries it.
-const toResponse = (response = {}) => ({
+const toResponse = response => ({
   statusMessage: 'Not Found',
   statusCode: 404,
   ...response,
-  headers: { ...response.headers }
+  headers: { ...response?.headers }
 })
 
 const CACHE_ERROR = `The \`cache\` option needs @kikobeats/cacheable-request.
@@ -49,9 +48,7 @@ const assertCacheSupport = (load = loadCacheableRequestManifest) => {
   let name
   try {
     name = load().name
-  } catch {
-    return
-  }
+  } catch {}
   if (name === 'cacheable-request') throw new TypeError(CACHE_ERROR)
 }
 
@@ -62,7 +59,9 @@ const willRetry = res => {
   return (
     res.retryCount < retry.limit &&
     retry.methods.includes(method) &&
-    retry.statusCodes.includes(res.statusCode)
+    retry.statusCodes.includes(res.statusCode) &&
+    // got declines a 413 outright unless the response says when to come back.
+    (res.statusCode !== 413 || res.headers['retry-after'] !== undefined)
   )
 }
 
@@ -98,7 +97,10 @@ const reachableUrl = async (url, opts) => {
     redirectStatusCodes.push(res.statusCode)
   })
 
-  const { reason: error } = await pReflect(req)
+  const error = await req.then(
+    () => undefined,
+    error => error
+  )
 
   // Once a response arrived it is the whole truth: a retried or cancelled request
   // settles with the attempt before it, whose body is not this response's. Only a
