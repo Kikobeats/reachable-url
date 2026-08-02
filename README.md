@@ -50,7 +50,7 @@ const response = await reachableUrl('https://example.com/favicon.png', { maxBody
 response.body[0] === 60 // => `<`, so the server answered with markup
 ```
 
-`Infinity` keeps the whole entity, and drops the `Range` header with it, since asking for one byte while wanting all of them would have a server that honors ranges answer with just that byte:
+Asking for more than one byte drops the `Range` header, since a server that honors it would answer with just that byte. `Infinity` is the extreme of that, and keeps the whole entity:
 
 ```js
 const response = await reachableUrl('https://example.com/favicon.svg', { maxBody: Infinity })
@@ -77,7 +77,7 @@ overrides:
 
 The [got response](https://github.com/sindresorhus/got#response), plus `requestUrl`, `redirectUrls`, `redirectStatusCodes` and the `followRedirect` in effect.
 
-The request asks for a single byte (`Range: bytes=0-0`). When a server ignores that and starts sending the whole entity, the download is cancelled: the status and headers already say whether the URL is reachable, so `body` is `undefined` on those responses unless [`maxBody`](#maxbody) asked for some of it.
+The request asks for a single byte ([`Range: bytes=0-0`](#maxbody)). When a server ignores that and starts sending the whole entity, the download is cancelled: the status and headers already say whether the URL is reachable, so `body` is `undefined` on those responses unless [`maxBody`](#maxbody) asked for some of it.
 
 A `206` that did answer the range is reported as the `200` it stands for, with `content-length` taken from `content-range`.
 

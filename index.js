@@ -67,14 +67,14 @@ const willRetry = res => {
 
 // `responseType: 'buffer'` would read the whole entity a server sent despite
 // `Range`; the status and headers already answer reachability. A cache entry is
-// written on `end` and a retry needs a retryable error, so both keep the body.
-const shouldAbortDownload = res =>
-  !res.request.options.cache && !honoredRange(res) && !willRetry(res)
+// written on `end`, a retry needs a retryable error and `maxBody: Infinity` was
+// asked for the entity, so all three keep the body.
+const shouldAbortDownload = (res, maxBody) =>
+  maxBody !== Infinity && !res.request.options.cache && !honoredRange(res) && !willRetry(res)
 
 // Asking for a range while wanting more of the body than it holds is
 // contradictory: a server honoring it would answer with that one byte.
-const toGotOptions = ({ maxBody, ...opts } = {}) =>
-  maxBody > RANGE_LENGTH ? { ...opts, headers: { ...opts.headers, Range: undefined } } : opts
+const withoutRange = opts => ({ ...opts, headers: { ...opts.headers, Range: undefined } })
 
 const cancelDownload = (req, res) => {
   // `phases.total` is filled on `end`, which a cancelled request never emits,
@@ -83,11 +83,10 @@ const cancelDownload = (req, res) => {
   req.cancel()
 }
 
-const reachableUrl = async (url, opts) => {
-  if (opts?.cache) assertCacheSupport()
-  const maxBody = opts?.maxBody ?? 0
-  const followRedirect = opts?.followRedirect ?? got.defaults.options.followRedirect
-  const req = got(url, toGotOptions(opts))
+const reachableUrl = async (url, { maxBody = 0, ...opts } = {}) => {
+  if (opts.cache) assertCacheSupport()
+  const followRedirect = opts.followRedirect ?? got.defaults.options.followRedirect
+  const req = got(url, maxBody > RANGE_LENGTH ? withoutRange(opts) : opts)
 
   const redirectStatusCodes = []
   const redirectUrls = []
@@ -95,8 +94,10 @@ const reachableUrl = async (url, opts) => {
 
   req.on('response', res => {
     response = res
-    if (maxBody === Infinity || !shouldAbortDownload(res)) return
+    if (!shouldAbortDownload(res, maxBody)) return
     if (maxBody === 0) return cancelDownload(req, res)
+    // An entity that already fits is read to the end, so got fills `body` itself.
+    if (Number(res.headers['content-length']) <= maxBody) return
 
     const chunks = []
     let read = 0

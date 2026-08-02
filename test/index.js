@@ -293,26 +293,30 @@ test('maxBody spans several chunks', async t => {
   t.is(res.body.toString(), 'abcd')
 })
 
-test('maxBody Infinity keeps the whole body', async t => {
-  const url = await createTestServer(t, (req, res) => sendPayload(res))
+test('maxBody leaves an entity that already fits', async t => {
+  const url = await createTestServer(t, (req, res) => {
+    res.writeHead(200, { 'content-type': 'text/plain', 'content-length': 2 })
+    res.end('ab')
+  })
 
-  const res = await reachableUrl(url, { maxBody: Infinity })
+  const res = await reachableUrl(url, { maxBody: 64 })
 
-  t.is(res.statusCode, 200)
-  t.deepEqual(res.body, LARGE_PAYLOAD)
+  t.is(res.body.toString(), 'ab')
 })
 
-// Asking for one byte while wanting the entity would have a compliant server
-// answer 206 with that byte, so the range has to go.
-test('maxBody above the range drops the Range header', async t => {
+// Asking for one byte while wanting more would have a compliant server answer
+// 206 with that byte, so the range has to go.
+test('maxBody above the range keeps the whole body and drops the Range header', async t => {
   let range = 'unset'
   const url = await createTestServer(t, (req, res) => {
     range = req.headers.range
     sendPayload(res)
   })
 
-  await reachableUrl(url, { maxBody: Infinity })
+  const res = await reachableUrl(url, { maxBody: Infinity })
   t.is(range, undefined)
+  t.is(res.statusCode, 200)
+  t.deepEqual(res.body, LARGE_PAYLOAD)
 
   await reachableUrl(url)
   t.is(range, 'bytes=0-0')
