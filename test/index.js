@@ -5,11 +5,11 @@ const test = require('ava').default
 const got = require('got')
 
 const {
-  IGNORED_RANGE_PAYLOAD,
+  LARGE_PAYLOAD,
   createTestServer,
   createEchoServer,
   createStatusServer,
-  createIgnoreRangeServer,
+  createAssetServer,
   createRangeServer
 } = require('./_helpers')
 
@@ -190,21 +190,24 @@ test('download jsut the first character from body', async t => {
 
 test('abort the download when the server ignores Range', async t => {
   let hits = 0
-  const url = await createIgnoreRangeServer(t, () => hits++)
+  const url = await createAssetServer(t, { body: LARGE_PAYLOAD, intercept: () => hits++ })
 
   const res = await reachableUrl(url)
 
   t.is(res.statusCode, 200)
   t.true(isReachable(res))
   t.is(hits, 1)
-  t.is(res.headers['content-length'], String(IGNORED_RANGE_PAYLOAD.length))
+  t.is(res.headers['content-length'], String(LARGE_PAYLOAD.length))
   t.is(res.body, undefined)
 })
 
-test('abort the download after a retry strips Range', async t => {
+test('abort the download once got has no retry left', async t => {
   let hits = 0
-  const url = await createIgnoreRangeServer(t, (req, res) => {
-    if (++hits === 1) res.writeHead(500, { 'content-type': 'text/plain' }).end('error')
+  const url = await createAssetServer(t, {
+    body: LARGE_PAYLOAD,
+    intercept: (req, res) => {
+      if (++hits === 1) res.writeHead(500, { 'content-type': 'text/plain' }).end('error')
+    }
   })
 
   const res = await reachableUrl(url)
@@ -215,17 +218,40 @@ test('abort the download after a retry strips Range', async t => {
   t.is(res.body, undefined)
 })
 
-test('reject an unpatched cacheable-request', t => {
-  class Upstream {
-    createCacheableRequest () {}
-  }
-
-  const error = t.throws(() => reachableUrl.assertCacheSupport(() => Upstream), {
-    instanceOf: TypeError
+// got stops retrying once the limit is reached, so the last attempt is abortable
+// even though its status is in `retry.statusCodes`.
+test('abort the download on a 5xx got will not retry', async t => {
+  let hits = 0
+  const url = await createAssetServer(t, {
+    body: LARGE_PAYLOAD,
+    intercept: (req, res) => {
+      hits++
+      res.writeHead(500, {
+        'content-type': 'application/octet-stream',
+        'content-length': LARGE_PAYLOAD.length
+      })
+      res.end(LARGE_PAYLOAD)
+    }
   })
+
+  const res = await reachableUrl(url)
+
+  t.is(res.statusCode, 500)
+  t.false(isReachable(res))
+  t.is(hits, 2)
+  t.is(res.body, undefined)
+})
+
+test('reject an unpatched cacheable-request', t => {
+  const error = t.throws(
+    () => reachableUrl.assertCacheSupport(() => ({ name: 'cacheable-request' })),
+    { instanceOf: TypeError }
+  )
   t.regex(error.message, /@kikobeats\/cacheable-request/)
 
-  t.notThrows(() => reachableUrl.assertCacheSupport(() => function () {}))
+  t.notThrows(() =>
+    reachableUrl.assertCacheSupport(() => ({ name: '@kikobeats/cacheable-request' }))
+  )
 })
 
 test('the installed cacheable-request is patched', t => {

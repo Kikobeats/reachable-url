@@ -27,28 +27,21 @@ const createStatusServer = (t, statusCode) =>
     res.end()
   })
 
-const createAssetServer = (t, { body, cacheControl }) =>
+// `Range` is ignored, so the whole body is always served. `intercept` can answer
+// the request itself to take over an attempt.
+const createAssetServer = (t, { body, cacheControl, intercept = () => {} }) =>
   createTestServer(t, (req, res) => {
+    intercept(req, res)
+    if (res.headersSent) return
     res.writeHead(200, {
       'content-type': 'text/plain',
       'content-length': Buffer.byteLength(body),
-      'cache-control': cacheControl
+      ...(cacheControl && { 'cache-control': cacheControl })
     })
     res.end(body)
   })
 
-const IGNORED_RANGE_PAYLOAD = Buffer.alloc(256 * 1024, 'x')
-
-const createIgnoreRangeServer = (t, onRequest = () => {}) =>
-  createTestServer(t, (req, res) => {
-    onRequest(req, res)
-    if (res.headersSent) return
-    res.writeHead(200, {
-      'content-type': 'application/octet-stream',
-      'content-length': IGNORED_RANGE_PAYLOAD.length
-    })
-    res.end(IGNORED_RANGE_PAYLOAD)
-  })
+const LARGE_PAYLOAD = Buffer.alloc(256 * 1024, 'x')
 
 const createRangeServer = (t, { body }) =>
   createTestServer(t, (req, res) => {
@@ -74,11 +67,10 @@ const createRangeServer = (t, { body }) =>
   })
 
 module.exports = {
-  IGNORED_RANGE_PAYLOAD,
+  LARGE_PAYLOAD,
   createTestServer,
   createEchoServer,
   createStatusServer,
   createAssetServer,
-  createIgnoreRangeServer,
   createRangeServer
 }
