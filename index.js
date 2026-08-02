@@ -94,15 +94,17 @@ const reachableUrl = async (url, opts) => {
     redirectStatusCodes.push(res.statusCode)
   })
 
-  const error = await req.then(
-    () => undefined,
-    error => error
-  )
+  let errorResponse
+  try {
+    await req
+  } catch (error) {
+    errorResponse = error.response
+  }
 
   // A retried or cancelled request settles with the attempt before it, whose body
   // is not this response's, so a response we saw outranks the error's. The error
   // still carries one when nothing else did, as MaxRedirects does.
-  const resolvedResponse = toResponse(response ?? error?.response)
+  const resolvedResponse = toResponse(response ?? errorResponse)
 
   if (resolvedResponse.statusCode === 206) {
     const contentRange = resolvedResponse.headers['content-range']
