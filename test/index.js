@@ -244,8 +244,6 @@ test('abort the download on a 5xx got will not retry', async t => {
   t.is(res.body, undefined)
 })
 
-// 413 is in got's `retry.statusCodes`, but got declines it outright without a
-// `retry-after`, so there is no retry to protect.
 test('abort the download on a 413 got will not retry', async t => {
   let hits = 0
   const url = await createTestServer(t, (req, res) => {

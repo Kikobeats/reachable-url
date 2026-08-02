@@ -2,12 +2,14 @@
 
 const { URL } = require('url')
 
+const RANGE_LENGTH = 1
+
 const got = require('got').extend({
   decompress: false,
   responseType: 'buffer',
   retry: 1,
   headers: {
-    Range: 'bytes=0-0'
+    Range: `bytes=0-${RANGE_LENGTH - 1}`
   },
   hooks: {
     beforeRetry: [
@@ -49,7 +51,8 @@ const assertCacheSupport = (load = loadCacheableRequestManifest) => {
   if (name === 'cacheable-request') throw new TypeError(CACHE_ERROR)
 }
 
-const honoredRange = res => res.statusCode === 206 && Number(res.headers['content-length']) <= 1
+const honoredRange = res =>
+  res.statusCode === 206 && Number(res.headers['content-length']) <= RANGE_LENGTH
 
 const willRetry = res => {
   const { retry, method } = res.request.options
@@ -99,25 +102,25 @@ const reachableUrl = async (url, opts) => {
   // A retried or cancelled request settles with the attempt before it, whose body
   // is not this response's, so a response we saw outranks the error's. The error
   // still carries one when nothing else did, as MaxRedirects does.
-  const mergedResponse = toResponse(response ?? error?.response)
+  const resolvedResponse = toResponse(response ?? error?.response)
 
-  if (mergedResponse.statusCode === 206) {
-    const contentRange = mergedResponse.headers['content-range']
+  if (resolvedResponse.statusCode === 206) {
+    const contentRange = resolvedResponse.headers['content-range']
     if (typeof contentRange === 'string') {
       let contentLength = contentRange.split('/')
       if (contentLength.length > 1) {
         contentLength = contentLength[contentLength.length - 1]
-        mergedResponse.statusCode = 200
-        mergedResponse.statusMessage = 'OK'
-        mergedResponse.headers['content-length'] = contentLength
-        mergedResponse.headers['content-range'] = undefined
+        resolvedResponse.statusCode = 200
+        resolvedResponse.statusMessage = 'OK'
+        resolvedResponse.headers['content-length'] = contentLength
+        resolvedResponse.headers['content-range'] = undefined
       }
     }
   }
 
   return {
     url,
-    ...mergedResponse,
+    ...resolvedResponse,
     followRedirect,
     redirectUrls,
     redirectStatusCodes,
