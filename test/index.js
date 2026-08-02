@@ -1,19 +1,17 @@
 'use strict'
 
-const { default: listen } = require('async-listen')
-const { createServer } = require('http')
 const { URL } = require('url')
 const test = require('ava').default
 const got = require('got')
+
+const { createEchoServer, createStatusServer, createRangeServer } = require('./_helpers')
 
 const reachableUrl = require('..')
 
 const { isReachable } = reachableUrl
 
-const closeServer = server => require('util').promisify(server.close.bind(server))()
-
 test('resolve GET request', async t => {
-  const url = 'https://httpbin.org/get'
+  const url = `${await createEchoServer(t)}/get`
   const res = await reachableUrl(url)
   t.deepEqual(res.redirectUrls, [])
   t.deepEqual(res.redirectStatusCodes, [])
@@ -74,45 +72,41 @@ test('passing options', async t => {
 })
 
 test('resolve non encoding urls', async t => {
-  const urlOne =
-    'https://httpbin.org/anything/pr-experterna:-s-forsoker-ta-kommando-over-"svenskhet"-i-valfilm-fZlCYGEtZA'
+  const origin = await createEchoServer(t)
+
+  const urlOne = `${origin}/anything/pr-experterna:-s-forsoker-ta-kommando-over-"svenskhet"-i-valfilm-fZlCYGEtZA`
   const resOne = await reachableUrl(urlOne)
   t.is(resOne.url, new URL(resOne.url).href)
   t.is(
     resOne.url,
-    'https://httpbin.org/anything/pr-experterna:-s-forsoker-ta-kommando-over-%22svenskhet%22-i-valfilm-fZlCYGEtZA'
+    `${origin}/anything/pr-experterna:-s-forsoker-ta-kommando-over-%22svenskhet%22-i-valfilm-fZlCYGEtZA`
   )
   t.is(200, resOne.statusCode)
   t.true(isReachable(resOne))
 
-  const urlTwo =
-    'https://httpbin.org/anything/@Acegikmo/the-ever-so-lovely-bézier-curve-eb27514da3bf'
+  const urlTwo = `${origin}/anything/@Acegikmo/the-ever-so-lovely-bézier-curve-eb27514da3bf`
   const resTwo = await reachableUrl(urlTwo)
   t.is(resTwo.url, new URL(resTwo.url).href)
-  t.is(
-    resTwo.url,
-    'https://httpbin.org/anything/@Acegikmo/the-ever-so-lovely-b%C3%A9zier-curve-eb27514da3bf'
-  )
+  t.is(resTwo.url, `${origin}/anything/@Acegikmo/the-ever-so-lovely-b%C3%A9zier-curve-eb27514da3bf`)
   t.is(200, resTwo.statusCode)
   t.true(isReachable(resTwo))
 })
 
 test('resolve already encoded urls', async t => {
-  const urlThree =
-    'https://httpbin.org/anything/@Acegikmo/the-ever-so-lovely-b%C3%A9zier-curve-eb27514da3bf'
-  const resThree = await reachableUrl(urlThree)
-  t.is(resThree.url, new URL(resThree.url).href)
-  t.is(
-    resThree.url,
-    'https://httpbin.org/anything/@Acegikmo/the-ever-so-lovely-b%C3%A9zier-curve-eb27514da3bf'
-  )
-  t.is(200, resThree.statusCode)
-  t.true(isReachable(resThree))
+  const origin = await createEchoServer(t)
+
+  const url = `${origin}/anything/@Acegikmo/the-ever-so-lovely-b%C3%A9zier-curve-eb27514da3bf`
+  const res = await reachableUrl(url)
+  t.is(res.url, new URL(res.url).href)
+  t.is(res.url, url)
+  t.is(200, res.statusCode)
+  t.true(isReachable(res))
 })
 
 test('keep original query search', async t => {
-  const url =
-    'https://httpbin.org/anything?screenshot&embed=screenshot.url&viewport.deviceScaleFactor=1&force'
+  const origin = await createEchoServer(t)
+
+  const url = `${origin}/anything?screenshot&embed=screenshot.url&viewport.deviceScaleFactor=1&force`
   const res = await reachableUrl(url)
   t.is(res.url, url)
 
@@ -124,49 +118,20 @@ test('keep original query search', async t => {
 })
 
 test("don't download the whole body", async t => {
-  t.timeout(1000)
-  const url = 'http://ftp.nluug.nl/pub/graphics/blender/demo/movies/ToS/ToS-4k-1920.mov'
+  const body = 'x'.repeat(1024)
+  const url = await createRangeServer(t, { body })
+
   const res = await reachableUrl(url)
-  t.is(res.url, url)
+
   t.is(200, res.statusCode)
   t.is(res.statusMessage, 'OK')
-  t.true(Object.keys(res.headers).length > 0)
-  t.truthy(res.headers['content-length'])
+  t.is(res.headers['content-length'], String(body.length))
   t.falsy(res.headers['content-range'])
+  t.is(res.body.length, 1)
 })
 
 test('download jsut the first character from body', async t => {
-  const server = createServer(async (req, res) => {
-    const data = 'Hello, world'
-    const totalLength = Buffer.byteLength(data)
-    const range = req.headers.range
-
-    if (range) {
-      const matches = range.match(/bytes=(\d*)-(\d*)/)
-
-      if (matches) {
-        const start = parseInt(matches[1], 10)
-        const end = matches[2] ? parseInt(matches[2], 10) : totalLength - 1
-
-        if (!isNaN(start) && !isNaN(end) && start <= end && end < totalLength) {
-          const chunk = data.slice(start, end + 1)
-          const chunkLength = Buffer.byteLength(chunk)
-
-          res.writeHead(206, {
-            'Content-Range': `bytes ${start}-${end}/${totalLength}`,
-            'Accept-Ranges': 'bytes',
-            'Content-Length': chunkLength,
-            'Content-Type': 'text/plain'
-          })
-
-          res.end(chunk)
-        }
-      }
-    }
-  })
-
-  const url = await listen(server, { port: 0, host: '127.0.0.1' })
-  t.teardown(() => closeServer(server))
+  const url = await createRangeServer(t, { body: 'Hello, world' })
 
   const res = await reachableUrl(url)
   t.true(isReachable(res))
@@ -205,7 +170,7 @@ test('resolve CDN url', async t => {
 
 test('fast unreachable request resolution', async t => {
   t.timeout(1000)
-  const url = 'https://httpbin.org/status/404'
+  const url = `${await createStatusServer(t, 404)}/`
   const res = await reachableUrl(url)
   t.is(res.url, url)
   t.false(isReachable(res))

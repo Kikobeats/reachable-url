@@ -2,6 +2,8 @@
 
 const test = require('ava').default
 
+const { createRangeServer } = require('./_helpers')
+
 const reachableUrl = require('..')
 
 test("don't cache response with no cache-control", async t => {
@@ -76,7 +78,10 @@ test('2xx', async t => {
 })
 
 test('static asset', async t => {
-  const url = 'http://ftp.nluug.nl/pub/graphics/blender/demo/movies/ToS/ToS-4k-1920.mov'
+  const url = await createRangeServer(t, {
+    body: 'x'.repeat(1024),
+    cacheControl: 'public, max-age=300'
+  })
   const cache = new Map()
 
   const responseOne = await reachableUrl(url, { cache })
