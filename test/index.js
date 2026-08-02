@@ -297,8 +297,9 @@ test('maxBody spans several chunks', async t => {
 // would take the process down instead of the promise.
 test('maxBody rejects a count Buffer cannot take', async t => {
   for (const maxBody of [-1, 0.5, '1', null, NaN]) {
-    const error = await t.throwsAsync(reachableUrl('https://example.com', { maxBody }))
-    t.is(error.constructor.name, 'TypeError')
+    await t.throwsAsync(reachableUrl('https://example.com', { maxBody }), {
+      instanceOf: TypeError
+    })
   }
 })
 

@@ -40,7 +40,7 @@ Same as [got#options](https://github.com/sindresorhus/got#goturl-options), plus:
 Type: `number`<br>
 Default: `0`
 
-How many bytes of the body to keep when the download would otherwise be cancelled. A positive integer or `Infinity`; anything else throws.
+How many bytes of the body to keep when the download would otherwise be cancelled. A non-negative integer or `Infinity`; anything else throws.
 
 The default answers reachability from the status and headers alone, never reading a body. Ask for more when the bytes themselves decide something:
 

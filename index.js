@@ -67,7 +67,7 @@ const willRetry = res => {
 
 // `responseType: 'buffer'` would read the whole entity a server sent despite
 // `Range`; the status and headers already answer reachability. A cache entry is
-// written on `end`, a retry needs a retryable error and `maxBody: Infinity` was
+// written on `end`, a retry needs a retryable error, and `maxBody: Infinity`
 // asked for the entity, so all three keep the body.
 const shouldAbortDownload = (res, maxBody) =>
   maxBody !== Infinity && !res.request.options.cache && !honoredRange(res) && !willRetry(res)
@@ -101,7 +101,7 @@ const keepFirstBytes = (req, res, maxBody) => {
 // uncatchable, so a value it cannot take is refused before the socket opens.
 const assertMaxBody = maxBody => {
   if (maxBody === Infinity || (Number.isInteger(maxBody) && maxBody >= 0)) return
-  throw new TypeError('`maxBody` needs to be a positive integer or `Infinity`.')
+  throw new TypeError('`maxBody` needs to be a non-negative integer or `Infinity`.')
 }
 
 const reachableUrl = async (url, { maxBody = 0, ...opts } = {}) => {
@@ -118,8 +118,6 @@ const reachableUrl = async (url, { maxBody = 0, ...opts } = {}) => {
     response = res
     if (!shouldAbortDownload(res, maxBody)) return
     if (maxBody === 0) return cancelDownload(req, res)
-    // An entity that already fits is read to the end, so got fills `body` itself.
-    if (Number(res.headers['content-length']) <= maxBody) return
     keepFirstBytes(req, res, maxBody)
   })
 
