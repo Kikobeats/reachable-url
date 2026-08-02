@@ -2,7 +2,6 @@
 
 const { URL } = require('url')
 const test = require('ava').default
-const got = require('got')
 
 const {
   LARGE_PAYLOAD,
@@ -26,16 +25,28 @@ test('resolve GET request', async t => {
   t.true(isReachable(res))
 })
 
+// The range request exists so a GET resolves at the headers, the way a HEAD does.
+// A server that announces a body and never sends it would otherwise hold the call
+// open until the timeout, once per attempt.
 test('resolve as fast a HEAD', async t => {
-  const url = 'https://edge-ping.vercel.app/'
+  let hits = 0
+  const timeout = 1000
+  const url = await createTestServer(t, (req, res) => {
+    hits++
+    res.writeHead(200, {
+      'content-type': 'application/octet-stream',
+      'content-length': LARGE_PAYLOAD.length
+    })
+    res.write(LARGE_PAYLOAD.subarray(0, 1))
+  })
 
-  const headResponse = await got.head(url, { throwHttpErrors: false })
-  const headTime = headResponse.timings.phases.total
+  const res = await reachableUrl(url, { timeout })
 
-  const getResponse = await reachableUrl(url)
-  const getTime = getResponse.timings.phases.total
-
-  t.true(getTime <= headTime * 2)
+  t.is(res.statusCode, 200)
+  t.true(isReachable(res))
+  t.is(hits, 1)
+  t.is(res.body, undefined)
+  t.true(res.timings.phases.total < timeout)
 })
 
 test('resolve redirect', async t => {
