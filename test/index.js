@@ -4,7 +4,12 @@ const { URL } = require('url')
 const test = require('ava').default
 const got = require('got')
 
-const { createEchoServer, createStatusServer, createRangeServer } = require('./_helpers')
+const {
+  createTestServer,
+  createEchoServer,
+  createStatusServer,
+  createRangeServer
+} = require('./_helpers')
 
 const reachableUrl = require('..')
 
@@ -71,14 +76,11 @@ test('passing options', async t => {
   t.true(isReachable(res))
 })
 
-const createRedirectServer = async (t, location = 'https://example.com') => {
-  const server = createServer((req, res) => {
-    res.writeHead(302, { location })
+const createRedirectServer = (t, location = () => 'https://example.com') =>
+  createTestServer(t, (req, res) => {
+    res.writeHead(302, { location: location(req) })
     res.end()
   })
-  t.teardown(() => closeServer(server))
-  return listen(server, { port: 0, host: '127.0.0.1' })
-}
 
 test('a redirect refused before connecting is not reachable', async t => {
   const url = await createRedirectServer(t)
@@ -99,12 +101,7 @@ test('a redirect refused before connecting is not reachable', async t => {
 })
 
 test('running out of redirects is not reachable', async t => {
-  const server = createServer((req, res) => {
-    res.writeHead(302, { location: req.url === '/' ? '/next' : '/' })
-    res.end()
-  })
-  t.teardown(() => closeServer(server))
-  const url = await listen(server, { port: 0, host: '127.0.0.1' })
+  const url = await createRedirectServer(t, req => (req.url === '/' ? '/next' : '/'))
 
   const res = await reachableUrl(url, { maxRedirects: 1 })
 
@@ -126,7 +123,6 @@ test('isReachable treats a bare redirect status as unfinished', t => {
   t.true(isReachable({ statusCode: 200 }))
   t.false(isReachable({ statusCode: 404 }))
   t.false(isReachable({ statusCode: 302 }))
-  t.false(isReachable({ statusCode: 302, followRedirect: true }))
   t.true(isReachable({ statusCode: 302, followRedirect: false }))
 })
 

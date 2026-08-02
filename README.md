@@ -35,8 +35,6 @@ The target URL to be resolved.
 
 Same as [got#options](https://github.com/sindresorhus/got#goturl-options)
 
-The resolved response echoes back `followRedirect`, so it can be handed straight to `reachableUrl.isReachable`.
-
 ### reachableUrl.isReachable(response)
 
 #### response
@@ -44,7 +42,7 @@ The resolved response echoes back `followRedirect`, so it can be handed straight
 *Required*<br>
 Type: `object`
 
-The response returned by `reachableUrl`. Only `statusCode` and `followRedirect` are read.
+The response returned by `reachableUrl`, which echoes back `followRedirect` so it can be handed straight over.
 
 A URL is reachable when the response is a final 2xx.
 
@@ -64,7 +62,7 @@ const response = await reachableUrl('https://example.com', {
 reachableUrl.isReachable(response) // => false
 ```
 
-`followRedirect` defaults to `true`, so a partial `{ statusCode }` object is judged as if redirects were being followed.
+A partial object missing `followRedirect` is judged as if redirects were being followed, so a bare `{ statusCode: 302 }` is unreachable.
 
 ## License
 
