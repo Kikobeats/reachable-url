@@ -3,7 +3,7 @@
 const { default: listen } = require('async-listen')
 const { createServer } = require('http')
 const { URL } = require('url')
-const test = require('ava')
+const test = require('ava').default
 const got = require('got')
 
 const reachableUrl = require('..')
