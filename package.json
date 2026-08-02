@@ -92,9 +92,7 @@
   },
   "pnpm": {
     "neverBuiltDependencies": [],
-    "overrides": {
-      "got>cacheable-request": "npm:@kikobeats/cacheable-request"
-    }
+    "overrides": {}
   },
   "simple-git-hooks": {
     "commit-msg": "npx commitlint --edit",
