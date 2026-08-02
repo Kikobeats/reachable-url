@@ -269,6 +269,71 @@ test('abort the download on a 413 got will not retry', async t => {
   t.is(res.body, undefined)
 })
 
+test('maxBody keeps the first bytes of an ignored Range', async t => {
+  const url = await createTestServer(t, (req, res) => sendPayload(res))
+
+  const res = await reachableUrl(url, { maxBody: 1 })
+
+  t.is(res.statusCode, 200)
+  t.is(res.body.length, 1)
+  t.is(res.body[0], LARGE_PAYLOAD[0])
+  // The whole point: the byte arrives without the entity behind it.
+  t.is(res.headers['content-length'], String(LARGE_PAYLOAD.length))
+})
+
+test('maxBody keeps as many bytes as asked', async t => {
+  const url = await createTestServer(t, (req, res) => sendPayload(res))
+
+  const res = await reachableUrl(url, { maxBody: 64 })
+
+  t.is(res.body.length, 64)
+  t.deepEqual(res.body, LARGE_PAYLOAD.subarray(0, 64))
+})
+
+test('maxBody spans several chunks', async t => {
+  const url = await createTestServer(t, (req, res) => {
+    res.writeHead(200, { 'content-type': 'text/plain', 'content-length': 6 })
+    res.write('ab')
+    setTimeout(() => res.write('cd'), 20)
+    setTimeout(() => res.end('ef'), 40)
+  })
+
+  const res = await reachableUrl(url, { maxBody: 4 })
+
+  t.is(res.body.toString(), 'abcd')
+})
+
+test('maxBody Infinity keeps the whole body', async t => {
+  const url = await createTestServer(t, (req, res) => sendPayload(res))
+
+  const res = await reachableUrl(url, { maxBody: Infinity })
+
+  t.is(res.statusCode, 200)
+  t.deepEqual(res.body, LARGE_PAYLOAD)
+})
+
+// Asking for one byte while wanting the entity would have a compliant server
+// answer 206 with that byte, so the range has to go.
+test('maxBody above the range drops the Range header', async t => {
+  let range = 'unset'
+  const url = await createTestServer(t, (req, res) => {
+    range = req.headers.range
+    sendPayload(res)
+  })
+
+  await reachableUrl(url, { maxBody: Infinity })
+  t.is(range, undefined)
+
+  await reachableUrl(url)
+  t.is(range, 'bytes=0-0')
+})
+
+test('maxBody is not forwarded to got', async t => {
+  const url = await createEchoServer(t)
+
+  await t.notThrowsAsync(reachableUrl(`${url}/`, { maxBody: 1 }))
+})
+
 test('reject an unpatched cacheable-request', t => {
   const error = t.throws(
     () => reachableUrl.assertCacheSupport(() => ({ name: 'cacheable-request' })),
