@@ -40,7 +40,7 @@ Same as [got#options](https://github.com/sindresorhus/got#goturl-options), plus:
 Type: `number`<br>
 Default: `0`
 
-How many bytes of the body to keep before the download is cancelled.
+How many bytes of the body to keep when the download would otherwise be cancelled. A positive integer or `Infinity`; anything else throws.
 
 The default answers reachability from the status and headers alone, never reading a body. Ask for more when the bytes themselves decide something:
 
@@ -77,7 +77,7 @@ overrides:
 
 The [got response](https://github.com/sindresorhus/got#response), plus `requestUrl`, `redirectUrls`, `redirectStatusCodes` and the `followRedirect` in effect.
 
-The request asks for a single byte ([`Range: bytes=0-0`](#maxbody)). When a server ignores that and starts sending the whole entity, the download is cancelled: the status and headers already say whether the URL is reachable, so `body` is `undefined` on those responses unless [`maxBody`](#maxbody) asked for some of it.
+By default the request asks for a single byte (`Range: bytes=0-0`, which [`maxBody`](#maxbody) drops when it wants more). When a server ignores that and starts sending the whole entity, the download is cancelled: the status and headers already say whether the URL is reachable, so `body` is `undefined` on those responses unless [`maxBody`](#maxbody) asked for some of it.
 
 A `206` that did answer the range is reported as the `200` it stands for, with `content-length` taken from `content-range`.
 

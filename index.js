@@ -83,7 +83,29 @@ const cancelDownload = (req, res) => {
   req.cancel()
 }
 
+const keepFirstBytes = (req, res, maxBody) => {
+  const chunks = []
+  let read = 0
+  // The cancel is not immediate, so chunks already in flight keep arriving.
+  const onData = chunk => {
+    chunks.push(chunk)
+    if ((read += chunk.length) < maxBody) return
+    res.off('data', onData)
+    res.body = Buffer.concat(chunks, maxBody)
+    cancelDownload(req, res)
+  }
+  res.on('data', onData)
+}
+
+// The count reaches `Buffer.concat` inside a stream callback, where a throw is
+// uncatchable, so a value it cannot take is refused before the socket opens.
+const assertMaxBody = maxBody => {
+  if (maxBody === Infinity || (Number.isInteger(maxBody) && maxBody >= 0)) return
+  throw new TypeError('`maxBody` needs to be a positive integer or `Infinity`.')
+}
+
 const reachableUrl = async (url, { maxBody = 0, ...opts } = {}) => {
+  assertMaxBody(maxBody)
   if (opts.cache) assertCacheSupport()
   const followRedirect = opts.followRedirect ?? got.defaults.options.followRedirect
   const req = got(url, maxBody > RANGE_LENGTH ? withoutRange(opts) : opts)
@@ -98,18 +120,7 @@ const reachableUrl = async (url, { maxBody = 0, ...opts } = {}) => {
     if (maxBody === 0) return cancelDownload(req, res)
     // An entity that already fits is read to the end, so got fills `body` itself.
     if (Number(res.headers['content-length']) <= maxBody) return
-
-    const chunks = []
-    let read = 0
-    // The cancel is not immediate, so chunks already in flight keep arriving.
-    const onData = chunk => {
-      chunks.push(chunk)
-      if ((read += chunk.length) < maxBody) return
-      res.off('data', onData)
-      res.body = Buffer.concat(chunks, maxBody)
-      cancelDownload(req, res)
-    }
-    res.on('data', onData)
+    keepFirstBytes(req, res, maxBody)
   })
 
   req.on('redirect', res => {

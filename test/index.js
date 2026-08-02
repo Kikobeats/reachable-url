@@ -293,6 +293,15 @@ test('maxBody spans several chunks', async t => {
   t.is(res.body.toString(), 'abcd')
 })
 
+// The count reaches `Buffer.concat` inside a stream callback, where the throw
+// would take the process down instead of the promise.
+test('maxBody rejects a count Buffer cannot take', async t => {
+  for (const maxBody of [-1, 0.5, '1', null, NaN]) {
+    const error = await t.throwsAsync(reachableUrl('https://example.com', { maxBody }))
+    t.is(error.constructor.name, 'TypeError')
+  }
+})
+
 test('maxBody leaves an entity that already fits', async t => {
   const url = await createTestServer(t, (req, res) => {
     res.writeHead(200, { 'content-type': 'text/plain', 'content-length': 2 })
