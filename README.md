@@ -45,6 +45,14 @@ const response = await reachableUrl('https://example.com/video.mp4', { cache })
 response.body // => the whole entity, so it can be cached
 ```
 
+`cache` needs [@kikobeats/cacheable-request](https://github.com/Kikobeats/cacheable-request): the version [got](https://github.com/sindresorhus/got) pulls in never settles when the origin keeps the connection alive, and no timeout recovers from it. Declare the override, otherwise passing `cache` throws:
+
+```yaml
+# pnpm-workspace.yaml
+overrides:
+  'cacheable-request@7': 'npm:@kikobeats/cacheable-request'
+```
+
 ### reachableUrl.isReachable(response)
 
 #### response

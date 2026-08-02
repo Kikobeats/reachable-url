@@ -241,6 +241,34 @@ test('abort the download after a retry strips Range', async t => {
   t.is(res.body, undefined)
 })
 
+test('reject an unpatched cacheable-request', t => {
+  // Upstream is a class exposing `createCacheableRequest`; the patched one is a
+  // plain factory function.
+  class Upstream {
+    createCacheableRequest () {}
+  }
+
+  const error = t.throws(() => reachableUrl.assertCacheSupport(() => Upstream), {
+    instanceOf: TypeError
+  })
+  t.regex(error.message, /@kikobeats\/cacheable-request/)
+
+  t.notThrows(() => reachableUrl.assertCacheSupport(() => function () {}))
+})
+
+test('the installed cacheable-request is patched', t => {
+  t.notThrows(() => reachableUrl.assertCacheSupport())
+})
+
+// A bundler can make the lookup fail; that must not stop a working setup.
+test('an unresolvable cacheable-request is not rejected', t => {
+  t.notThrows(() =>
+    reachableUrl.assertCacheSupport(() => {
+      throw new Error('Cannot find module')
+    })
+  )
+})
+
 // Caching needs the whole body, so the abort has to stand down for it.
 test('keep the download when caching', async t => {
   const url = await createIgnoreRangeServer(t)

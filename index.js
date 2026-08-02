@@ -27,6 +27,38 @@ const mergeResponse = (responseOrigin = {}, responseDestination = {}) => ({
   ...responseDestination
 })
 
+// The unpatched cacheable-request is a class exposing `createCacheableRequest`;
+// the patched one is a plain factory function. Checking the shape rather than
+// the resolved path keeps this working under bundlers and aliases.
+const isPatchedCacheableRequest = CacheableRequest =>
+  typeof CacheableRequest?.prototype?.createCacheableRequest !== 'function'
+
+const CACHE_ERROR = `The \`cache\` option needs @kikobeats/cacheable-request.
+
+got resolved the unpatched cacheable-request@7, which never settles when the
+origin keeps the connection alive, and no timeout recovers from it. Add the
+override to your pnpm-workspace.yaml:
+
+  overrides:
+    'cacheable-request@7': 'npm:@kikobeats/cacheable-request'`
+
+const loadCacheableRequest = () =>
+  require(require.resolve('cacheable-request', { paths: [require.resolve('got')] }))
+
+// Resolution can legitimately fail under a bundler, so an unknown answer counts
+// as patched: refusing to run is worse than missing the warning.
+const detectCacheSupport = (load = loadCacheableRequest) => {
+  try {
+    return isPatchedCacheableRequest(load())
+  } catch {
+    return true
+  }
+}
+
+const assertCacheSupport = load => {
+  if (!detectCacheSupport(load)) throw new TypeError(CACHE_ERROR)
+}
+
 const honoredRange = res => res.statusCode === 206 && Number(res.headers['content-length']) <= 1
 
 const isRetryable = res => res.statusCode >= 500 && res.statusCode < 600
@@ -39,6 +71,7 @@ const isRetryable = res => res.statusCode >= 500 && res.statusCode < 600
 const shouldAbortDownload = (res, opts) => !opts?.cache && !honoredRange(res) && !isRetryable(res)
 
 const reachableUrl = async (url, opts) => {
+  if (opts?.cache) assertCacheSupport()
   const followRedirect = opts?.followRedirect ?? got.defaults.options.followRedirect
   const req = got(url, opts)
 
@@ -111,3 +144,4 @@ module.exports = async (url, opts) => {
 }
 
 module.exports.isReachable = isReachable
+module.exports.assertCacheSupport = assertCacheSupport
