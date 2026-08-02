@@ -35,6 +35,37 @@ The target URL to be resolved.
 
 Same as [got#options](https://github.com/sindresorhus/got#goturl-options)
 
+The resolved response echoes back `followRedirect`, so it can be handed straight to `reachableUrl.isReachable`.
+
+### reachableUrl.isReachable(response)
+
+#### response
+
+*Required*<br>
+Type: `object`
+
+The response returned by `reachableUrl`. Only `statusCode` and `followRedirect` are read.
+
+A URL is reachable when the response is a final 2xx.
+
+A redirect status is the final answer only when redirects were not being followed:
+
+```js
+const response = await reachableUrl('https://example.com', { followRedirect: false })
+reachableUrl.isReachable(response) // => true, the 3xx is the destination
+```
+
+With redirect following on (the default), a 3xx is the hop the follow stopped at (a `beforeRedirect` hook threw, `maxRedirects` ran out), meaning the URL was never reached:
+
+```js
+const response = await reachableUrl('https://example.com', {
+  hooks: { beforeRedirect: [() => { throw new Error('refused') }] }
+})
+reachableUrl.isReachable(response) // => false
+```
+
+`followRedirect` defaults to `true`, so a partial `{ statusCode }` object is judged as if redirects were being followed.
+
 ## License
 
 **reachable-url** © [Kiko Beats](https://kikobeats.com), released under the [MIT](https://github.com/Kikobeats/reachable-url/blob/master/LICENSE.md) License.<br>
