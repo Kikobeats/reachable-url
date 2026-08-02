@@ -27,8 +27,9 @@ const createStatusServer = (t, statusCode) =>
     res.end()
   })
 
-const createAssetServer = (t, { body, cacheControl }) =>
+const createAssetServer = (t, { body, cacheControl, onRequest }) =>
   createTestServer(t, (req, res) => {
+    if (onRequest) onRequest(req)
     const headers = { 'content-type': 'text/plain', 'content-length': Buffer.byteLength(body) }
     if (cacheControl) headers['cache-control'] = cacheControl
     res.writeHead(200, headers)

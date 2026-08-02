@@ -78,18 +78,24 @@ test('2xx', async t => {
 })
 
 test('static asset', async t => {
+  const trace = msg => process.stderr.write(`TRACE ${msg}\n`)
+  trace('creating server')
   const url = await createAssetServer(t, {
     body: 'x'.repeat(1024),
-    cacheControl: 'public, max-age=300'
+    cacheControl: 'public, max-age=300',
+    onRequest: req => trace(`server got request range=${req.headers.range}`)
   })
+  trace(`server listening at ${url}`)
   const cache = new Map()
 
   const responseOne = await reachableUrl(url, { cache })
+  trace(`one ${responseOne.statusCode} fromCache=${responseOne.isFromCache} size=${cache.size}`)
 
   t.is(responseOne.isFromCache, false)
   t.is(cache.size, 1)
 
   const responseTwo = await reachableUrl(url, { cache })
+  trace(`two ${responseTwo.statusCode} fromCache=${responseTwo.isFromCache} size=${cache.size}`)
 
   t.is(responseTwo.isFromCache, true)
   t.is(cache.size, 1)
