@@ -2,7 +2,7 @@
 
 const test = require('ava').default
 
-const { createRangeServer } = require('./_helpers')
+const { createAssetServer } = require('./_helpers')
 
 const reachableUrl = require('..')
 
@@ -78,7 +78,7 @@ test('2xx', async t => {
 })
 
 test('static asset', async t => {
-  const url = await createRangeServer(t, {
+  const url = await createAssetServer(t, {
     body: 'x'.repeat(1024),
     cacheControl: 'public, max-age=300'
   })

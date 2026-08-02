@@ -27,16 +27,21 @@ const createStatusServer = (t, statusCode) =>
     res.end()
   })
 
-const createRangeServer = (t, { body, cacheControl } = {}) =>
+const createAssetServer = (t, { body, cacheControl }) =>
+  createTestServer(t, (req, res) => {
+    const headers = { 'content-type': 'text/plain', 'content-length': Buffer.byteLength(body) }
+    if (cacheControl) headers['cache-control'] = cacheControl
+    res.writeHead(200, headers)
+    res.end(body)
+  })
+
+const createRangeServer = (t, { body }) =>
   createTestServer(t, (req, res) => {
     const totalLength = Buffer.byteLength(body)
-    const headers = { 'content-type': 'text/plain' }
-    if (cacheControl) headers['cache-control'] = cacheControl
-
     const matches = /bytes=(\d+)-(\d*)/.exec(req.headers.range ?? '')
 
     if (matches === null) {
-      res.writeHead(200, { ...headers, 'content-length': totalLength })
+      res.writeHead(200, { 'content-type': 'text/plain', 'content-length': totalLength })
       return res.end(body)
     }
 
@@ -45,7 +50,7 @@ const createRangeServer = (t, { body, cacheControl } = {}) =>
     const chunk = body.slice(start, end + 1)
 
     res.writeHead(206, {
-      ...headers,
+      'content-type': 'text/plain',
       'accept-ranges': 'bytes',
       'content-range': `bytes ${start}-${end}/${totalLength}`,
       'content-length': Buffer.byteLength(chunk)
@@ -53,4 +58,10 @@ const createRangeServer = (t, { body, cacheControl } = {}) =>
     res.end(chunk)
   })
 
-module.exports = { createTestServer, createEchoServer, createStatusServer, createRangeServer }
+module.exports = {
+  createTestServer,
+  createEchoServer,
+  createStatusServer,
+  createAssetServer,
+  createRangeServer
+}
