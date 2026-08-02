@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 1.8.4 (2026-08-02)
+
+
+### Bug Fixes
+
+* restore the cacheable-request override and make the suite deterministic ([#75](https://github.com/Kikobeats/reachable-url/issues/75)) ([dfdb5c9](https://github.com/Kikobeats/reachable-url/commit/dfdb5c99dc6ae487fa58fd45ecff6ba47ffcee2a))
+
 ### 1.8.3 (2025-09-05)
 
 ### 1.8.2 (2025-06-28)
