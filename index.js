@@ -126,19 +126,17 @@ const reachableUrl = async (url, { maxBody = 0, ...opts } = {}) => {
     redirectStatusCodes.push(res.statusCode)
   })
 
-  // Prefer the promise result: an `afterResponse` retry resolves with the final
-  // response without emitting another outer `response` event. Cancel rejects, so
-  // the listener's response (with any `maxBody` bytes) still wins there. The
-  // error still carries one when nothing else did, as MaxRedirects does.
-  let settledResponse
+  // An `afterResponse` retry resolves with the final response without emitting
+  // another outer `response` event, so the promise result supersedes the
+  // listener's. The error carries one when nothing else did, as MaxRedirects does.
   let errorResponse
   try {
-    settledResponse = await req
+    response = await req
   } catch (error) {
     errorResponse = error.response
   }
 
-  const resolvedResponse = toResponse(settledResponse ?? response ?? errorResponse)
+  const resolvedResponse = toResponse(response ?? errorResponse)
 
   if (resolvedResponse.statusCode === 206) {
     const contentRange = resolvedResponse.headers['content-range']

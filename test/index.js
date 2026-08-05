@@ -132,8 +132,6 @@ test('isReachable treats a bare redirect status as unfinished', t => {
   t.true(isReachable({ statusCode: 302, followRedirect: false }))
 })
 
-// afterResponse retries nest inside got and never emit a second outer `response`
-// event; the promise is the only place that carries the final status/body.
 test('afterResponse retry returns the final response', async t => {
   let hits = 0
   const url = await createTestServer(t, (req, res) => {
@@ -148,13 +146,10 @@ test('afterResponse retry returns the final response', async t => {
 
   const res = await reachableUrl(url, {
     maxBody: Infinity,
-    throwHttpErrors: false,
     hooks: {
       afterResponse: [
         (response, retry) =>
-          response.statusCode === 401
-            ? retry({ headers: { authorization: 'fresh' } })
-            : response
+          response.statusCode === 401 ? retry({ headers: { authorization: 'fresh' } }) : response
       ]
     }
   })
