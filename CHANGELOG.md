@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 2.1.2 (2026-08-05)
+
+
+### Bug Fixes
+
+* prefer settled response after afterResponse retries ([#79](https://github.com/Kikobeats/reachable-url/issues/79)) ([39e9535](https://github.com/Kikobeats/reachable-url/commit/39e953501286274b3fa284d5f368d2ecd2c4f93a))
+
 ### 2.1.1 (2026-08-03)
 
 ## 2.1.0 (2026-08-02)
