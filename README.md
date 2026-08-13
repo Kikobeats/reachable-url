@@ -79,7 +79,7 @@ The [got response](https://github.com/sindresorhus/got#response), plus `requestU
 
 By default the request asks for a single byte (`Range: bytes=0-0`, which [`maxBody`](#maxbody) drops when it wants more). When a server ignores that and starts sending the whole entity, the download is cancelled: the status and headers already say whether the URL is reachable, so `body` is `undefined` on those responses unless [`maxBody`](#maxbody) asked for some of it.
 
-A `206` that did answer the range is reported as the `200` it stands for, with `content-length` taken from `content-range`.
+A `206` that did answer the range is reported as the `200` it stands for, with `content-length` taken from a numeric `content-range` total. An unknown total (`bytes 0-0/*`) is left as a `206`.
 
 ### reachableUrl.isReachable(response)
 

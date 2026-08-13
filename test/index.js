@@ -56,7 +56,11 @@ test('resolve redirect', async t => {
   t.deepEqual(res.redirectUrls, ['https://github.com/kikobeats/splashy'])
   t.deepEqual(res.redirectStatusCodes, [301])
   t.is('https://github.com/microlinkhq/splashy', res.url)
-  t.is(200, res.statusCode)
+  // GitHub may answer the range with `Content-Range: bytes 0-0/*`; that stays 206.
+  t.true(res.statusCode === 200 || res.statusCode === 206)
+  if (res.headers['content-length'] !== undefined) {
+    t.regex(String(res.headers['content-length']), /^\d+$/)
+  }
   t.true(isReachable(res))
 })
 
@@ -225,6 +229,44 @@ test('download jsut the first character from body', async t => {
   const res = await reachableUrl(url)
   t.true(isReachable(res))
   t.is(res.body.toString(), 'H')
+})
+
+// RFC 7233 allows `*` when the total is unknown. That is not a Content-Length.
+test('206 with an unknown content-range total keeps a numeric content-length', async t => {
+  const url = await createTestServer(t, (req, res) => {
+    res.writeHead(206, {
+      'content-type': 'text/plain',
+      'accept-ranges': 'bytes',
+      'content-range': 'bytes 0-0/*',
+      'content-length': '1'
+    })
+    res.end('X')
+  })
+
+  const res = await reachableUrl(url)
+
+  t.is(res.statusCode, 206)
+  t.is(res.headers['content-length'], '1')
+  t.is(res.headers['content-range'], 'bytes 0-0/*')
+  t.is(res.body.toString(), 'X')
+  t.true(isReachable(res))
+})
+
+test('206 with a non-numeric content-range total is left alone', async t => {
+  const url = await createTestServer(t, (req, res) => {
+    res.writeHead(206, {
+      'content-type': 'text/plain',
+      'content-range': 'bytes 0-0/not-a-number',
+      'content-length': '1'
+    })
+    res.end('X')
+  })
+
+  const res = await reachableUrl(url)
+
+  t.is(res.statusCode, 206)
+  t.is(res.headers['content-length'], '1')
+  t.not(res.headers['content-length'], 'not-a-number')
 })
 
 // The server never reads `Range`, so it always answers with the whole entity.
