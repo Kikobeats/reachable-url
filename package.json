@@ -2,7 +2,7 @@
   "name": "reachable-url",
   "description": "Resolve a URL as fast as possible and report whether the destination is reachable over HTTP.",
   "homepage": "https://github.com/Kikobeats/reachable-url",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "main": "index.js",
   "author": {
     "email": "josefrancisco.verdu@gmail.com",

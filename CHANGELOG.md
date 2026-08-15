@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 2.1.3 (2026-08-15)
+
+
+### Bug Fixes
+
+* leave 206 alone when content-range total is unknown ([#80](https://github.com/Kikobeats/reachable-url/issues/80)) ([c71651a](https://github.com/Kikobeats/reachable-url/commit/c71651aa84ae1a5ba0f41a9ccfe45fa34536039f))
+
 ### 2.1.2 (2026-08-05)
 
 
