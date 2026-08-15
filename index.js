@@ -138,15 +138,17 @@ const reachableUrl = async (url, { maxBody = 0, ...opts } = {}) => {
 
   const resolvedResponse = toResponse(response ?? errorResponse)
 
+  // A satisfied range stands for the whole entity only when the total size is
+  // known. `bytes 0-0/*` (or any non-numeric total) must not become
+  // `content-length: *`, which is not a length and replaces a valid partial one.
   if (resolvedResponse.statusCode === 206) {
     const contentRange = resolvedResponse.headers['content-range']
     if (typeof contentRange === 'string') {
-      let contentLength = contentRange.split('/')
-      if (contentLength.length > 1) {
-        contentLength = contentLength[contentLength.length - 1]
+      const total = contentRange.split('/').pop()
+      if (/^\d+$/.test(total)) {
         resolvedResponse.statusCode = 200
         resolvedResponse.statusMessage = 'OK'
-        resolvedResponse.headers['content-length'] = contentLength
+        resolvedResponse.headers['content-length'] = total
         resolvedResponse.headers['content-range'] = undefined
       }
     }
