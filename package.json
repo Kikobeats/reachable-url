@@ -30,7 +30,7 @@
     "url"
   ],
   "dependencies": {
-    "got": "~11.8.0"
+    "got": "~16.0.0"
   },
   "devDependencies": {
     "@commitlint/cli": "latest",
