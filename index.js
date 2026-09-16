@@ -4,7 +4,7 @@ const { URL } = require('url')
 
 const RANGE_LENGTH = 1
 
-const got = require('got').extend({
+const got = require('@kikobeats/got').extend({
   decompress: false,
   responseType: 'buffer',
   retry: 1,

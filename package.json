@@ -30,7 +30,7 @@
     "url"
   ],
   "dependencies": {
-    "got": "~11.8.0"
+    "@kikobeats/got": "~11.8.8"
   },
   "devDependencies": {
     "@commitlint/cli": "latest",
