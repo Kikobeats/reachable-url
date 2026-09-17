@@ -35,7 +35,7 @@
   "devDependencies": {
     "@commitlint/cli": "latest",
     "@commitlint/config-conventional": "latest",
-    "@kikobeats/cacheable-request": "latest",
+    "@kikobeats/cacheable-request": "^7.0.7",
     "async-listen": "latest",
     "ava": "latest",
     "c8": "latest",
