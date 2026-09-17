@@ -409,6 +409,7 @@ test('reject an unpatched cacheable-request', t => {
 })
 
 test('the installed cacheable-request is patched', t => {
+  t.is(reachableUrl.loadCacheableRequestManifest().name, '@kikobeats/cacheable-request')
   t.notThrows(() => reachableUrl.assertCacheSupport())
 })
 
