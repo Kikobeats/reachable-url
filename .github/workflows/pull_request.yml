@@ -10,6 +10,8 @@ on:
 
 env:
   pnpm_config_dangerously_allow_all_builds: true
+  pnpm_config_minimum_release_age: 0
+  pnpm_config_overrides: '{"@kikobeats/got>cacheable-request":"npm:@kikobeats/cacheable-request"}'
   CI: true
 
 jobs:
