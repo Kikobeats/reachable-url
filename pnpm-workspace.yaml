@@ -1,3 +1,4 @@
+minimumReleaseAge: 0
 neverBuiltDependencies: []
 overrides:
-  '@kikobeats/got>cacheable-request': npm:@kikobeats/cacheable-request@^7.0.7
+  '@kikobeats/got>cacheable-request': npm:@kikobeats/cacheable-request
