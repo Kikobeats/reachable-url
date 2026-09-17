@@ -4,7 +4,7 @@ const { URL } = require('url')
 
 const RANGE_LENGTH = 1
 
-const got = require('got').extend({
+const got = require('@kikobeats/got').extend({
   decompress: false,
   responseType: 'buffer',
   retry: 1,
@@ -30,15 +30,14 @@ const toResponse = response => ({
 
 const CACHE_ERROR = `The \`cache\` option needs @kikobeats/cacheable-request.
 
-got resolved the unpatched cacheable-request@7, which never settles when the
-origin keeps the connection alive, and no timeout recovers from it. Add the
-override to your pnpm-workspace.yaml:
-
-  overrides:
-    got>cacheable-request: npm:@kikobeats/cacheable-request`
+@kikobeats/got resolved the unpatched cacheable-request@7, which never settles
+when the origin keeps the connection alive, and no timeout recovers from it.
+Upgrade @kikobeats/got to 11.8.9 or later, which depends on the patched fork.`
 
 const loadCacheableRequestManifest = () =>
-  require(require.resolve('cacheable-request/package.json', { paths: [require.resolve('got')] }))
+  require(require.resolve('cacheable-request/package.json', {
+    paths: [require.resolve('@kikobeats/got')]
+  }))
 
 // The override is an alias, which keeps the real package name, so the manifest says
 // which one got resolved. Only a positive match rejects: the lookup can legitimately
@@ -175,3 +174,4 @@ module.exports = async (url, opts) => {
 
 module.exports.isReachable = isReachable
 module.exports.assertCacheSupport = assertCacheSupport
+module.exports.loadCacheableRequestManifest = loadCacheableRequestManifest

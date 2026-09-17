@@ -5,6 +5,10 @@ on:
     branches:
       - master
 
+env:
+  pnpm_config_dangerously_allow_all_builds: true
+  pnpm_config_minimum_release_age: 0
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -22,7 +26,7 @@ jobs:
         with:
           version: latest
       - name: Install
-        run: pnpm install --dangerously-allow-all-builds
+        run: pnpm install
       - name: Test
         run: npm test
       - name: Report
