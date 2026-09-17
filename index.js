@@ -31,11 +31,8 @@ const toResponse = response => ({
 const CACHE_ERROR = `The \`cache\` option needs @kikobeats/cacheable-request.
 
 @kikobeats/got resolved the unpatched cacheable-request@7, which never settles
-when the origin keeps the connection alive, and no timeout recovers from it. Add
-the override to your pnpm-workspace.yaml:
-
-  overrides:
-    '@kikobeats/got>cacheable-request': npm:@kikobeats/cacheable-request`
+when the origin keeps the connection alive, and no timeout recovers from it.
+Upgrade @kikobeats/got to 11.8.9 or later, which depends on the patched fork.`
 
 const loadCacheableRequestManifest = () =>
   require(require.resolve('cacheable-request/package.json', {

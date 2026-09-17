@@ -65,13 +65,7 @@ const response = await reachableUrl('https://example.com/video.mp4', { cache })
 response.body // => the whole entity, so it can be cached
 ```
 
-`cache` needs [@kikobeats/cacheable-request](https://github.com/Kikobeats/cacheable-request): the version [got](https://github.com/sindresorhus/got) pulls in never settles when the origin keeps the connection alive, and no timeout recovers from it. Declare the override, otherwise passing `cache` throws:
-
-```yaml
-# pnpm-workspace.yaml
-overrides:
-  got>cacheable-request: npm:@kikobeats/cacheable-request
-```
+`cache` needs [@kikobeats/cacheable-request](https://github.com/Kikobeats/cacheable-request): upstream [cacheable-request](https://github.com/jaredwray/cacheable/tree/main/packages/cacheable-request) never settles when the origin keeps the connection alive, and no timeout recovers from it. [@kikobeats/got](https://github.com/Kikobeats/got) depends on the fork since 11.8.9, so it works without any configuration. If something in your dependency tree still resolves the upstream package, passing `cache` throws instead of hanging.
 
 #### returns
 
