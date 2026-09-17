@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 2.1.4 (2026-09-17)
+
+
+### Bug Fixes
+
+* use @kikobeats/got to support Node.js 24.20 ([#82](https://github.com/Kikobeats/reachable-url/issues/82)) ([96a5b1e](https://github.com/Kikobeats/reachable-url/commit/96a5b1ee5ea3332462a459c95a4af994e0eb41be)), closes [nodejs/node#64847](https://github.com/nodejs/node/issues/64847)
+
 ### 2.1.3 (2026-08-15)
 
 
