@@ -309,6 +309,48 @@ test('abort the download after a retry strips Range', async t => {
   t.is(res.body, undefined)
 })
 
+// A retryable 5xx used to wait for the body so got could throw HTTPError.
+// A server that never ends that body held the call open forever (no cancel,
+// no retry). Destroying the unread body yields ECONNRESET, which got retries.
+test('abort a hanging retryable 5xx and retry', async t => {
+  let hits = 0
+  const url = await createTestServer(t, (req, res) => {
+    hits++
+    if (hits === 1) {
+      res.writeHead(503, { 'content-type': 'text/plain', 'transfer-encoding': 'chunked' })
+      res.write('unavailable')
+      return
+    }
+    sendPayload(res)
+  })
+
+  const res = await reachableUrl(url)
+
+  t.is(res.statusCode, 200)
+  t.true(isReachable(res))
+  t.is(hits, 2)
+  t.is(res.body, undefined)
+})
+
+test('abort a hanging 5xx once got will not retry', async t => {
+  let hits = 0
+  const url = await createTestServer(t, (req, res) => {
+    hits++
+    res.writeHead(500, {
+      'content-type': 'application/octet-stream',
+      'content-length': LARGE_PAYLOAD.length
+    })
+    res.write(LARGE_PAYLOAD.subarray(0, 1))
+  })
+
+  const res = await reachableUrl(url)
+
+  t.is(res.statusCode, 500)
+  t.false(isReachable(res))
+  t.is(hits, 2)
+  t.is(res.body, undefined)
+})
+
 // got stops retrying once the limit is reached, so the last attempt is abortable
 // even though its status is in `retry.statusCodes`.
 test('abort the download on a 5xx got will not retry', async t => {
