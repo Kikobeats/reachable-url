@@ -312,6 +312,8 @@ test('abort the download after a retry strips Range', async t => {
 // A retryable 5xx used to wait for the body so got could throw HTTPError.
 // A server that never ends that body held the call open forever (no cancel,
 // no retry). Destroying the unread body yields ECONNRESET, which got retries.
+// `write` puts the status on the wire: `writeHead` alone stays corked, so the
+// client never sees a response to abort.
 test('abort a hanging retryable 5xx and retry', async t => {
   let hits = 0
   const url = await createTestServer(t, (req, res) => {
@@ -332,6 +334,8 @@ test('abort a hanging retryable 5xx and retry', async t => {
   t.is(res.body, undefined)
 })
 
+// The byte is the flush. A `content-length` without a write never leaves
+// Node's corked response.
 test('abort a hanging 5xx once got will not retry', async t => {
   let hits = 0
   const url = await createTestServer(t, (req, res) => {
