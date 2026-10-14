@@ -1,8 +1,8 @@
 # reachable-url
 
-![Last version](https://img.shields.io/github/tag/Kikobeats/reachable-url.svg?style=flat-square)
-[![Coverage Status](https://img.shields.io/coveralls/Kikobeats/reachable-url.svg?style=flat-square)](https://coveralls.io/github/Kikobeats/reachable-url)
-[![NPM Status](https://img.shields.io/npm/dm/reachable-url.svg?style=flat-square)](https://www.npmjs.org/package/reachable-url)
+[![Last version](https://img.shields.io/github/v/tag/Kikobeats/reachable-url?style=flat-square)](https://github.com/Kikobeats/reachable-url/releases)
+[![Coverage Status](https://img.shields.io/coverallsCoverage/github/Kikobeats/reachable-url?style=flat-square)](https://coveralls.io/github/Kikobeats/reachable-url)
+[![NPM Status](https://img.shields.io/npm/dm/reachable-url?style=flat-square)](https://www.npmjs.com/package/reachable-url)
 
 > Given an URL, it resolves as fast as possible, performing a GET without downloading the body.
 
