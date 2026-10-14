@@ -66,20 +66,33 @@ const willRetry = res => {
 
 // `responseType: 'buffer'` would read the whole entity a server sent despite
 // `Range`; the status and headers already answer reachability. A cache entry is
-// written on `end`, a retry needs a retryable error, and `maxBody: Infinity`
-// asked for the entity, so all three keep the body.
+// written on `end`, and `maxBody: Infinity` asked for the entity, so both keep
+// the body. A retryable status still has to become a retryable error: canceling
+// the promise would skip the retry, so the unread body is destroyed instead
+// and got sees ECONNRESET.
 const shouldAbortDownload = (res, maxBody) =>
-  maxBody !== Infinity && !res.request.options.cache && !honoredRange(res) && !willRetry(res)
+  maxBody !== Infinity && !res.request.options.cache && !honoredRange(res)
 
 // Asking for a range while wanting more of the body than it holds is
 // contradictory: a server honoring it would answer with that one byte.
 const withoutRange = opts => ({ ...opts, headers: { ...opts.headers, Range: undefined } })
 
-const cancelDownload = (req, res) => {
+const stampTotal = res => {
   // `phases.total` is filled on `end`, which a cancelled request never emits,
   // and the timer does not record the cancel either.
   res.timings.phases.total = Date.now() - res.timings.start
+}
+
+const cancelDownload = (req, res) => {
+  stampTotal(res)
   req.cancel()
+}
+
+// Destroying the IncomingMessage (not the promise) lets got treat the attempt
+// as ECONNRESET and retry. `req.cancel()` would reject with CancelError.
+const abortBodyForRetry = res => {
+  stampTotal(res)
+  res.destroy()
 }
 
 const keepFirstBytes = (req, res, maxBody) => {
@@ -116,6 +129,7 @@ const reachableUrl = async (url, { maxBody = 0, ...opts } = {}) => {
   req.on('response', res => {
     response = res
     if (!shouldAbortDownload(res, maxBody)) return
+    if (willRetry(res)) return abortBodyForRetry(res)
     if (maxBody === 0) return cancelDownload(req, res)
     keepFirstBytes(req, res, maxBody)
   })
