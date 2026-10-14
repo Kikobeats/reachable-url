@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 2.1.6 (2026-10-14)
+
+
+### Bug Fixes
+
+* abort hanging retryable 5xx so the request can retry ([#83](https://github.com/Kikobeats/reachable-url/issues/83)) ([d10b66d](https://github.com/Kikobeats/reachable-url/commit/d10b66d6ab8907f0a916adc38911b7327195c34b))
+
 ### 2.1.5 (2026-10-14)
 
 ### 2.1.4 (2026-09-17)
