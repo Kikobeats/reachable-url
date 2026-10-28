@@ -34,3 +34,6 @@ coverage
 ############################
 .envrc
 scripts/status-codes.json
+benchmark-output.json
+head-output.json
+cache/
