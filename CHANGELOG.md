@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 2.1.9 (2026-11-07)
+
+
+### Bug Fixes
+
+* wait for retry-after only within the timeout ([#87](https://github.com/Kikobeats/reachable-url/issues/87)) ([9a00d6d](https://github.com/Kikobeats/reachable-url/commit/9a00d6d8278550fdedbbf8f74b0a3408314d2292))
+
 ### 2.1.8 (2026-10-28)
 
 
