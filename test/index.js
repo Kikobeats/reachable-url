@@ -270,10 +270,11 @@ test('206 with a non-numeric content-range total is left alone', async t => {
 })
 
 // The server never reads `Range`, so it always answers with the whole entity.
-const sendPayload = (res, statusCode = 200) => {
+const sendPayload = (res, statusCode = 200, headers = {}) => {
   res.writeHead(statusCode, {
     'content-type': 'application/octet-stream',
-    'content-length': LARGE_PAYLOAD.length
+    'content-length': LARGE_PAYLOAD.length,
+    ...headers
   })
   res.end(LARGE_PAYLOAD)
 }
@@ -512,4 +513,73 @@ test('header `content-length` is present', async t => {
   t.true(isReachable(res))
   t.truthy(res.headers['content-length'])
   t.falsy(res.headers['content-range'])
+})
+
+const retryAfterServer = (t, retryAfter) => {
+  const state = { hits: 0 }
+  return createTestServer(t, (req, res) => {
+    if (++state.hits === 1) return sendPayload(res, 503, { 'retry-after': retryAfter })
+    sendPayload(res)
+  }).then(url => ({ url, state }))
+}
+
+const settlesWithin = (promise, ms) =>
+  Promise.race([
+    promise,
+    new Promise((resolve, reject) => setTimeout(() => reject(new Error('never settled')), ms))
+  ])
+
+test('a retry-after longer than the timeout answers the status without retrying', async t => {
+  const { url, state } = await retryAfterServer(t, '3600')
+
+  const res = await settlesWithin(reachableUrl(url, { timeout: 4000 }), 3000)
+
+  t.is(res.statusCode, 503)
+  t.false(isReachable(res))
+  t.is(state.hits, 1)
+})
+
+test('a retry-after with no timeout answers the status without retrying', async t => {
+  const { url, state } = await retryAfterServer(t, '3600')
+
+  const res = await settlesWithin(reachableUrl(url), 3000)
+
+  t.is(res.statusCode, 503)
+  t.is(state.hits, 1)
+})
+
+test('a retry-after date beyond the timeout answers the status without retrying', async t => {
+  const { url, state } = await retryAfterServer(t, new Date(Date.now() + 3600000).toUTCString())
+
+  const res = await settlesWithin(reachableUrl(url, { timeout: 4000 }), 3000)
+
+  t.is(res.statusCode, 503)
+  t.is(state.hits, 1)
+})
+
+test('a retry-after within the timeout is retried', async t => {
+  const { url, state } = await retryAfterServer(t, '0.05')
+
+  const res = await settlesWithin(reachableUrl(url, { timeout: 4000 }), 3000)
+
+  t.is(res.statusCode, 200)
+  t.is(state.hits, 2)
+})
+
+test('a retry-after beyond the timeout on a hanging body answers the status', async t => {
+  let hits = 0
+  const url = await createTestServer(t, (req, res) => {
+    hits++
+    res.writeHead(503, {
+      'content-type': 'application/octet-stream',
+      'content-length': LARGE_PAYLOAD.length,
+      'retry-after': '3600'
+    })
+    res.write(LARGE_PAYLOAD.subarray(0, 1))
+  })
+
+  const res = await settlesWithin(reachableUrl(url, { timeout: 4000 }), 3000)
+
+  t.is(res.statusCode, 503)
+  t.is(hits, 1)
 })

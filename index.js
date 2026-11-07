@@ -64,6 +64,18 @@ const willRetry = res => {
   )
 }
 
+// got derives `maxRetryAfter` from the timeout once, when options are normalized.
+// `extend` above normalized them without a timeout, which froze it at Infinity, so
+// a 503 with `retry-after: 3600` slept an hour before its retry. Deriving it per
+// call restores got's own rule: wait for `retry-after` only within the timeout.
+const requestTimeout = timeout => (typeof timeout === 'number' ? timeout : timeout?.request)
+
+const withRetryAfterCap = opts => {
+  const retry = typeof opts.retry === 'number' ? { limit: opts.retry } : { ...opts.retry }
+  if (retry.maxRetryAfter !== undefined) return opts
+  return { ...opts, retry: { ...retry, maxRetryAfter: requestTimeout(opts.timeout) ?? 0 } }
+}
+
 // `responseType: 'buffer'` would read the whole entity a server sent despite
 // `Range`; the status and headers already answer reachability. A cache entry is
 // written on `end`, and `maxBody: Infinity` asked for the entity, so both keep
@@ -120,7 +132,8 @@ const reachableUrl = async (url, { maxBody = 0, ...opts } = {}) => {
   assertMaxBody(maxBody)
   if (opts.cache) assertCacheSupport()
   const followRedirect = opts.followRedirect ?? got.defaults.options.followRedirect
-  const req = got(url, maxBody > RANGE_LENGTH ? withoutRange(opts) : opts)
+  const requestOpts = withRetryAfterCap(opts)
+  const req = got(url, maxBody > RANGE_LENGTH ? withoutRange(requestOpts) : requestOpts)
 
   const redirectStatusCodes = []
   const redirectUrls = []
