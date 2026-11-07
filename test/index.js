@@ -570,6 +570,15 @@ test('a retry-after within the timeout is retried', async t => {
   t.is(state.hits, 2)
 })
 
+test('a retry-after longer than the timeout is not retried when the body is requested', async t => {
+  const { url, state } = await retryAfterServer(t, '3600')
+
+  const res = await settlesWithin(reachableUrl(url, { timeout: 4000, maxBody: 2 }), 3000)
+
+  t.is(res.statusCode, 503)
+  t.is(state.hits, 1)
+})
+
 test('a retry-after beyond the timeout on a hanging body answers the status', async t => {
   let hits = 0
   const url = await createTestServer(t, (req, res) => {
@@ -631,7 +640,16 @@ test('a retry-after between the request and connect timeouts is not retried', as
 })
 
 test('a zero connect timeout caps retry-after when request is longer', async t => {
-  const { url, state } = await retryAfterServer(t, '0.05')
+  let hits = 0
+  const url = await createTestServer(t, (req, res) => {
+    hits++
+    res.writeHead(hits === 1 ? 503 : 200, {
+      'content-type': 'text/plain',
+      'content-length': 1,
+      'retry-after': '0.05'
+    })
+    res.end('x')
+  })
 
   const res = await settlesWithin(
     reachableUrl(url, { timeout: { request: 10000, connect: 0 } }),
@@ -639,7 +657,7 @@ test('a zero connect timeout caps retry-after when request is longer', async t =
   )
 
   t.is(res.statusCode, 503)
-  t.is(state.hits, 1)
+  t.is(hits, 1)
 })
 
 test('an explicit maxRetryAfter of 0 is not replaced by the timeout', async t => {
