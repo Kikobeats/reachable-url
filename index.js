@@ -64,16 +64,23 @@ const willRetry = res => {
   )
 }
 
-// got derives `maxRetryAfter` from the timeout once, when options are normalized.
-// `extend` above normalized them without a timeout, which froze it at Infinity, so
-// a 503 with `retry-after: 3600` slept an hour before its retry. Deriving it per
-// call restores got's own rule: wait for `retry-after` only within the timeout.
-const requestTimeout = timeout => (typeof timeout === 'number' ? timeout : timeout?.request)
+// got derives `maxRetryAfter` once, when options are normalized: the lesser of the
+// numeric `request` and `connect` timeouts, or Infinity when both are absent.
+// `extend` above did that without a timeout and froze Infinity, so a 503 with
+// `retry-after: 3600` slept an hour. Derive the same cap on each call, and use 0
+// when neither timeout is set so a missing timeout does not wait.
+const retryAfterLimit = timeout => {
+  const limits =
+    typeof timeout === 'number'
+      ? [timeout]
+      : [timeout?.request, timeout?.connect].filter(limit => typeof limit === 'number')
+  return limits.length === 0 ? 0 : Math.min(...limits)
+}
 
 const withRetryAfterCap = opts => {
   const retry = typeof opts.retry === 'number' ? { limit: opts.retry } : { ...opts.retry }
   if (retry.maxRetryAfter !== undefined) return opts
-  return { ...opts, retry: { ...retry, maxRetryAfter: requestTimeout(opts.timeout) ?? 0 } }
+  return { ...opts, retry: { ...retry, maxRetryAfter: retryAfterLimit(opts.timeout) } }
 }
 
 // `responseType: 'buffer'` would read the whole entity a server sent despite

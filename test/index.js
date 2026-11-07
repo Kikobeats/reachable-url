@@ -1,6 +1,10 @@
 'use strict'
 
+const { createServer } = require('http')
 const { URL } = require('url')
+const { promisify } = require('util')
+
+const { default: listen } = require('async-listen')
 const test = require('ava').default
 
 const {
@@ -582,4 +586,171 @@ test('a retry-after beyond the timeout on a hanging body answers the status', as
 
   t.is(res.statusCode, 503)
   t.is(hits, 1)
+})
+
+test('a retry-after within a request timeout object is retried', async t => {
+  const { url, state } = await retryAfterServer(t, '0.05')
+
+  const res = await settlesWithin(reachableUrl(url, { timeout: { request: 4000 } }), 3000)
+
+  t.is(res.statusCode, 200)
+  t.is(state.hits, 2)
+})
+
+test('a retry-after within a connect timeout is retried', async t => {
+  const { url, state } = await retryAfterServer(t, '0.05')
+
+  const res = await settlesWithin(reachableUrl(url, { timeout: { connect: 4000 } }), 3000)
+
+  t.is(res.statusCode, 200)
+  t.is(state.hits, 2)
+})
+
+test('a retry-after between the connect and request timeouts is not retried', async t => {
+  const { url, state } = await retryAfterServer(t, '2')
+
+  const res = await settlesWithin(
+    reachableUrl(url, { timeout: { request: 10000, connect: 1000 } }),
+    3000
+  )
+
+  t.is(res.statusCode, 503)
+  t.is(state.hits, 1)
+})
+
+test('a retry-after between the request and connect timeouts is not retried', async t => {
+  const { url, state } = await retryAfterServer(t, '2')
+
+  const res = await settlesWithin(
+    reachableUrl(url, { timeout: { request: 1000, connect: 10000 } }),
+    3000
+  )
+
+  t.is(res.statusCode, 503)
+  t.is(state.hits, 1)
+})
+
+test('a zero connect timeout caps retry-after when request is longer', async t => {
+  const { url, state } = await retryAfterServer(t, '0.05')
+
+  const res = await settlesWithin(
+    reachableUrl(url, { timeout: { request: 10000, connect: 0 } }),
+    3000
+  )
+
+  t.is(res.statusCode, 503)
+  t.is(state.hits, 1)
+})
+
+test('an explicit maxRetryAfter of 0 is not replaced by the timeout', async t => {
+  const { url, state } = await retryAfterServer(t, '0.05')
+
+  const res = await settlesWithin(
+    reachableUrl(url, { timeout: 4000, retry: { maxRetryAfter: 0 } }),
+    3000
+  )
+
+  t.is(res.statusCode, 503)
+  t.is(state.hits, 1)
+})
+
+test('an explicit maxRetryAfter allows a retry when no timeout is set', async t => {
+  const { url, state } = await retryAfterServer(t, '0.05')
+
+  const res = await settlesWithin(reachableUrl(url, { retry: { maxRetryAfter: 4000 } }), 3000)
+
+  t.is(res.statusCode, 200)
+  t.is(state.hits, 2)
+})
+
+test('a numeric retry limit of 0 does not retry', async t => {
+  const { url, state } = await retryAfterServer(t, '0.05')
+
+  const res = await settlesWithin(reachableUrl(url, { timeout: 4000, retry: 0 }), 3000)
+
+  t.is(res.statusCode, 503)
+  t.is(state.hits, 1)
+})
+
+test('a numeric retry limit still retries within the timeout', async t => {
+  const { url, state } = await retryAfterServer(t, '0.05')
+
+  const res = await settlesWithin(reachableUrl(url, { timeout: 4000, retry: 2 }), 3000)
+
+  t.is(res.statusCode, 200)
+  t.is(state.hits, 2)
+})
+
+test('a retry limit of 0 in an options object does not retry', async t => {
+  const { url, state } = await retryAfterServer(t, '0.05')
+
+  const res = await settlesWithin(reachableUrl(url, { timeout: 4000, retry: { limit: 0 } }), 3000)
+
+  t.is(res.statusCode, 503)
+  t.is(state.hits, 1)
+})
+
+test('an empty retry methods list does not retry', async t => {
+  const { url, state } = await retryAfterServer(t, '0.05')
+
+  const res = await settlesWithin(
+    reachableUrl(url, { timeout: 4000, retry: { methods: [] } }),
+    3000
+  )
+
+  t.is(res.statusCode, 503)
+  t.is(state.hits, 1)
+})
+
+test('an empty retry statusCodes list does not retry', async t => {
+  const { url, state } = await retryAfterServer(t, '0.05')
+
+  const res = await settlesWithin(
+    reachableUrl(url, { timeout: 4000, retry: { statusCodes: [] } }),
+    3000
+  )
+
+  t.is(res.statusCode, 503)
+  t.is(state.hits, 1)
+})
+
+test('a calculateDelay that returns 0 does not retry', async t => {
+  const { url, state } = await retryAfterServer(t, '0.05')
+
+  const res = await settlesWithin(
+    reachableUrl(url, { timeout: 4000, retry: { calculateDelay: () => 0 } }),
+    3000
+  )
+
+  t.is(res.statusCode, 503)
+  t.is(state.hits, 1)
+})
+
+const refusedUrl = async () => {
+  const server = createServer()
+  const { port } = await listen(server, { port: 0, host: '127.0.0.1' })
+  await promisify(server.close.bind(server))()
+  return `http://127.0.0.1:${port}`
+}
+
+test('an empty errorCodes list is not retried', async t => {
+  const url = await refusedUrl()
+  let retries = 0
+
+  await settlesWithin(
+    reachableUrl(url, {
+      timeout: 1000,
+      retry: { errorCodes: [] },
+      hooks: {
+        beforeRetry: [
+          () => {
+            retries++
+          }
+        ]
+      }
+    }),
+    3000
+  )
+
+  t.is(retries, 0)
 })
