@@ -69,11 +69,16 @@ const willRetry = res => {
 // `extend` above did that without a timeout and froze Infinity, so a 503 with
 // `retry-after: 3600` slept an hour. Derive the same cap on each call, and use 0
 // when neither timeout is set so a missing timeout does not wait.
+// got's `is.number` rejects `NaN`. Keeping it makes `Math.min` return `NaN`, and
+// `retryAfter > NaN` never caps the wait, so a NaN connect beside a real request
+// timeout sleeps out `retry-after`.
+const numericTimeout = limit => typeof limit === 'number' && !Number.isNaN(limit)
+
 const retryAfterLimit = timeout => {
-  const limits =
-    typeof timeout === 'number'
-      ? [timeout]
-      : [timeout?.request, timeout?.connect].filter(limit => typeof limit === 'number')
+  const limits = (typeof timeout === 'number'
+    ? [timeout]
+    : [timeout?.request, timeout?.connect]
+  ).filter(numericTimeout)
   return limits.length === 0 ? 0 : Math.min(...limits)
 }
 

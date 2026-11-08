@@ -639,6 +639,30 @@ test('a retry-after between the request and connect timeouts is not retried', as
   t.is(state.hits, 1)
 })
 
+test('a NaN connect timeout does not discard the request cap', async t => {
+  const { url, state } = await retryAfterServer(t, '3600')
+
+  const res = await settlesWithin(
+    reachableUrl(url, { timeout: { request: 4000, connect: NaN } }),
+    3000
+  )
+
+  t.is(res.statusCode, 503)
+  t.is(state.hits, 1)
+})
+
+test('a NaN connect timeout still retries inside the request cap', async t => {
+  const { url, state } = await retryAfterServer(t, '0.05')
+
+  const res = await settlesWithin(
+    reachableUrl(url, { timeout: { request: 4000, connect: NaN } }),
+    3000
+  )
+
+  t.is(res.statusCode, 200)
+  t.is(state.hits, 2)
+})
+
 test('a zero connect timeout caps retry-after when request is longer', async t => {
   let hits = 0
   const url = await createTestServer(t, (req, res) => {
