@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 2.1.10 (2026-11-09)
+
+
+### Bug Fixes
+
+* ignore NaN when capping retry-after ([#88](https://github.com/Kikobeats/reachable-url/issues/88)) ([3964ec0](https://github.com/Kikobeats/reachable-url/commit/3964ec047850201271add3174d7cdb7d1907a544))
+
 ### 2.1.9 (2026-11-07)
 
 
