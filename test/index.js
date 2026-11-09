@@ -55,6 +55,8 @@ test('resolve as fast a HEAD', async t => {
 })
 
 test('resolve a github url', async t => {
+  // GitHub's HTML edge sometimes takes longer than Ava's 10s default from CI.
+  t.timeout(30000)
   const url = 'https://github.com/microlinkhq/splashy'
   const res = await reachableUrl(url)
   t.deepEqual(res.redirectUrls, [])
