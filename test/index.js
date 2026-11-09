@@ -54,12 +54,12 @@ test('resolve as fast a HEAD', async t => {
   t.true(res.timings.phases.total < timeout)
 })
 
-test('resolve redirect', async t => {
-  const url = 'https://github.com/kikobeats/splashy'
+test('resolve a github url', async t => {
+  const url = 'https://github.com/microlinkhq/splashy'
   const res = await reachableUrl(url)
-  t.deepEqual(res.redirectUrls, ['https://github.com/kikobeats/splashy'])
-  t.deepEqual(res.redirectStatusCodes, [301])
-  t.is('https://github.com/microlinkhq/splashy', res.url)
+  t.deepEqual(res.redirectUrls, [])
+  t.deepEqual(res.redirectStatusCodes, [])
+  t.is(res.url, url)
   // GitHub may answer the range with `Content-Range: bytes 0-0/*`; that stays 206.
   t.true(res.statusCode === 200 || res.statusCode === 206)
   if (res.headers['content-length'] !== undefined) {
