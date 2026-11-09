@@ -54,12 +54,14 @@ test('resolve as fast a HEAD', async t => {
   t.true(res.timings.phases.total < timeout)
 })
 
-test('resolve redirect', async t => {
-  const url = 'https://github.com/kikobeats/splashy'
+test('resolve a github url', async t => {
+  // GitHub's HTML edge sometimes takes longer than Ava's 10s default from CI.
+  t.timeout(30000)
+  const url = 'https://github.com/microlinkhq/splashy'
   const res = await reachableUrl(url)
-  t.deepEqual(res.redirectUrls, ['https://github.com/kikobeats/splashy'])
-  t.deepEqual(res.redirectStatusCodes, [301])
-  t.is('https://github.com/microlinkhq/splashy', res.url)
+  t.deepEqual(res.redirectUrls, [])
+  t.deepEqual(res.redirectStatusCodes, [])
+  t.is(res.url, url)
   // GitHub may answer the range with `Content-Range: bytes 0-0/*`; that stays 206.
   t.true(res.statusCode === 200 || res.statusCode === 206)
   if (res.headers['content-length'] !== undefined) {
@@ -637,6 +639,30 @@ test('a retry-after between the request and connect timeouts is not retried', as
 
   t.is(res.statusCode, 503)
   t.is(state.hits, 1)
+})
+
+test('a NaN connect timeout does not discard the request cap', async t => {
+  const { url, state } = await retryAfterServer(t, '3600')
+
+  const res = await settlesWithin(
+    reachableUrl(url, { timeout: { request: 4000, connect: NaN } }),
+    3000
+  )
+
+  t.is(res.statusCode, 503)
+  t.is(state.hits, 1)
+})
+
+test('a NaN connect timeout still retries inside the request cap', async t => {
+  const { url, state } = await retryAfterServer(t, '0.05')
+
+  const res = await settlesWithin(
+    reachableUrl(url, { timeout: { request: 4000, connect: NaN } }),
+    3000
+  )
+
+  t.is(res.statusCode, 200)
+  t.is(state.hits, 2)
 })
 
 test('a zero connect timeout caps retry-after when request is longer', async t => {

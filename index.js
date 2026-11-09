@@ -69,18 +69,31 @@ const willRetry = res => {
 // `extend` above did that without a timeout and froze Infinity, so a 503 with
 // `retry-after: 3600` slept an hour. Derive the same cap on each call, and use 0
 // when neither timeout is set so a missing timeout does not wait.
+// got's `is.number` rejects `NaN`. Keeping it makes `Math.min` return `NaN`, and
+// `retryAfter > NaN` never caps the wait, so a NaN connect beside a real request
+// timeout sleeps out `retry-after`. The same value must not reach got either:
+// `setTimeout(NaN)` runs in 1ms and can spend the only retry before `retry-after`.
+const numericTimeout = limit => typeof limit === 'number' && !Number.isNaN(limit)
+
+const timeoutWithoutNaN = timeout => {
+  if (typeof timeout !== 'object' || timeout === null) return timeout
+  const entries = Object.entries(timeout).filter(([, value]) => !Number.isNaN(value))
+  return entries.length === Object.keys(timeout).length ? timeout : Object.fromEntries(entries)
+}
+
 const retryAfterLimit = timeout => {
-  const limits =
-    typeof timeout === 'number'
-      ? [timeout]
-      : [timeout?.request, timeout?.connect].filter(limit => typeof limit === 'number')
+  const limits = (
+    typeof timeout === 'number' ? [timeout] : [timeout?.request, timeout?.connect]
+  ).filter(numericTimeout)
   return limits.length === 0 ? 0 : Math.min(...limits)
 }
 
 const withRetryAfterCap = opts => {
-  const retry = typeof opts.retry === 'number' ? { limit: opts.retry } : { ...opts.retry }
-  if (retry.maxRetryAfter !== undefined) return opts
-  return { ...opts, retry: { ...retry, maxRetryAfter: retryAfterLimit(opts.timeout) } }
+  const timeout = timeoutWithoutNaN(opts.timeout)
+  const base = timeout === opts.timeout ? opts : { ...opts, timeout }
+  const retry = typeof base.retry === 'number' ? { limit: base.retry } : { ...base.retry }
+  if (retry.maxRetryAfter !== undefined) return base
+  return { ...base, retry: { ...retry, maxRetryAfter: retryAfterLimit(timeout) } }
 }
 
 // `responseType: 'buffer'` would read the whole entity a server sent despite
